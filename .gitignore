@@ -1,0 +1,19 @@
+# SPEC benchmark suites - symlinks only, actual content excluded
+repos/*/
+repos/*/**
+!repos/.gitkeep
+
+# Build artifacts
+build-info/
+results/
+*/result/
+*.tar
+*.zip
+
+# LLVM build cache
+.ccachefile*
+.ccachestats*
+
+# OS files
+.DS_Store
+Thumbs.db

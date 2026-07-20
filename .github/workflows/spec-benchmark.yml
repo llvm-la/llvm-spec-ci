@@ -1,0 +1,142 @@
+name: SPEC CPU Benchmark
+
+on:
+  schedule:
+    # Every 15 days: 1st and 16th at 00:00 UTC
+    - cron: "0 0 1,16 * *"
+  workflow_dispatch:
+    # Allow manual trigger for testing
+
+permissions:
+  contents: write
+  pages: write
+
+# Cancel in-progress runs on new push to same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LLVM_BUILD_DIR: /tmp/llvm-spec-build
+
+jobs:
+  setup-env:
+    name: Environment Check
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check environment
+        run: ./scripts/setup-env.sh
+
+  build-llvm:
+    name: Build LLVM (clang + flang)
+    needs: setup-env
+    runs-on: self-hosted
+    timeout-minutes: 480
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize ccache
+        run: |
+          mkdir -p ${{ runner.temp }}/.ccache
+          export CCACHE_DIR="${{ runner.temp }}/.ccache"
+          ccache --max-size=50G || true
+          ccache --show-stats || true
+      - name: Build LLVM from main
+        run: ./scripts/build-llvm.sh
+      - name: Upload build info
+        uses: actions/upload-artifact@v4
+        with:
+          name: llvm-build-info
+          path: build-info/
+          retention-days: 90
+
+  run-spec2017:
+    name: Run SPEC CPU 2017
+    needs: build-llvm
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: llvm-build-info
+          path: build-info/
+      - name: Run SPEC CPU 2017
+        run: ./scripts/run-spec2017.sh
+      - name: Upload SPEC 2017 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec2017-results
+          path: results/spec2017/
+          retention-days: 90
+          include-hidden-files: true
+
+  run-spec2006:
+    name: Run SPEC CPU 2006
+    needs: build-llvm
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: llvm-build-info
+          path: build-info/
+      - name: Run SPEC CPU 2006
+        run: ./scripts/run-spec2006.sh
+      - name: Upload SPEC 2006 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec2006-results
+          path: results/spec2006/
+          retention-days: 90
+          include-hidden-files: true
+
+  generate-report:
+    name: Generate Report
+    needs: [run-spec2017, run-spec2006]
+    runs-on: self-hosted
+    if: always()
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: llvm-build-info
+          path: build-info/
+      - name: Download SPEC 2017 results
+        uses: actions/download-artifact@v4
+        with:
+          name: spec2017-results
+          path: results/spec2017/
+      - name: Download SPEC 2006 results
+        uses: actions/download-artifact@v4
+        with:
+          name: spec2006-results
+          path: results/spec2006/
+      - name: Generate summary report
+        run: ./scripts/generate-report.sh
+      - name: Upload summary report
+        uses: actions/upload-artifact@v4
+        with:
+          name: summary-report
+          path: results/latest/
+          retention-days: 90
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+      - name: Upload to Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: results/latest/
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
