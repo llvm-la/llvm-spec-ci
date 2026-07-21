@@ -45,12 +45,6 @@ jobs:
           ccache --show-stats || true
       - name: Build LLVM from main
         run: ./scripts/build-llvm.sh
-      - name: Upload build info
-        uses: actions/upload-artifact@v4
-        with:
-          name: llvm-build-info
-          path: build-info/
-          retention-days: 90
 
   run-spec2017:
     name: Run SPEC CPU 2017
@@ -58,11 +52,6 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 1440
     steps:
-      - name: Download build info
-        uses: actions/download-artifact@v4
-        with:
-          name: llvm-build-info
-          path: build-info/
       - name: Run SPEC CPU 2017
         run: ./scripts/run-spec2017.sh
       - name: Upload SPEC 2017 results
@@ -80,11 +69,6 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 1440
     steps:
-      - name: Download build info
-        uses: actions/download-artifact@v4
-        with:
-          name: llvm-build-info
-          path: build-info/
       - name: Run SPEC CPU 2006
         run: ./scripts/run-spec2006.sh
       - name: Upload SPEC 2006 results
@@ -103,21 +87,6 @@ jobs:
     if: always()
     timeout-minutes: 30
     steps:
-      - name: Download build info
-        uses: actions/download-artifact@v4
-        with:
-          name: llvm-build-info
-          path: build-info/
-      - name: Download SPEC 2017 results
-        uses: actions/download-artifact@v4
-        with:
-          name: spec2017-results
-          path: results/spec2017/
-      - name: Download SPEC 2006 results
-        uses: actions/download-artifact@v4
-        with:
-          name: spec2006-results
-          path: results/spec2006/
       - name: Generate summary report
         run: ./scripts/generate-report.sh
       - name: Upload summary report
