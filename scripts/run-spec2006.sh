@@ -21,9 +21,11 @@ echo "Build Dir:   $BUILD_DIR"
 sed "s|@@BUILD_DIR@@|$BUILD_DIR|g" "$CFG_FILE" > "$SPEC_DIR/config/clang-loongarch.cfg"
 
 cd "$SPEC_DIR"
+source shrc
+relocate
 
 # Run full specint + specfp
-./runspec \
+./bin/runspec \
   --config=config/clang-loongarch.cfg \
   --runguid="$RUNGUID" \
   --norerun \

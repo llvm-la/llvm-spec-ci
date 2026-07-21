@@ -33,24 +33,20 @@ for suite in cpu2017 cpu2006 llvm-project; do
   fi
 done
 
-# Check SPEC runspec exists
-for suite in cpu2017 cpu2006; do
-  path="repos/$suite/runspec"
-  if [ -f "$path" ] && [ -x "$path" ]; then
-    echo "[OK] $suite/runspec executable"
-  else
-    echo "[FAIL] $suite/runspec missing or not executable"
-    FAIL=1
-  fi
-done
-
-# Check SPEC license
-if command -v lmstat &>/dev/null; then
-  check "SPEC license server reachable" lmstat -a -c /usr/local/flexlm/license.dat 2>/dev/null || true
-elif [ -n "${LM_LICENSE_FILE:-}" ]; then
-  echo "[OK] LM_LICENSE_FILE set: $LM_LICENSE_FILE"
+# Check SPEC CPU 2017 runcpu exists
+if [ -f "repos/cpu2017/bin/runcpu" ] && [ -x "repos/cpu2017/bin/runcpu" ]; then
+  echo "[OK] cpu2017/bin/runcpu executable"
 else
-  echo "[WARN] No lmstat or LM_LICENSE_FILE found - license may still work via SPEC config"
+  echo "[FAIL] cpu2017/bin/runcpu missing or not executable"
+  FAIL=1
+fi
+
+# Check SPEC CPU 2006 runspec exists
+if [ -f "repos/cpu2006/bin/runspec" ] && [ -x "repos/cpu2006/bin/runspec" ]; then
+  echo "[OK] cpu2006/bin/runspec executable"
+else
+  echo "[FAIL] cpu2006/bin/runspec missing or not executable"
+  FAIL=1
 fi
 
 # Check disk space (require at least 50G free)
