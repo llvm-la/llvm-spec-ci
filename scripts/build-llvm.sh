@@ -4,7 +4,7 @@ set -euo pipefail
 # Build LLVM clang + flang from main branch (Release, LoongArch target)
 
 BUILD_DIR="${LLVM_BUILD_DIR:-/tmp/llvm-spec-build}"
-SRC_DIR="${LLVM_SRC_DIR:-repos/llvm-project}"
+SRC_DIR="$(readlink -f "${LLVM_SRC_DIR:-repos/llvm-project}")"
 OUTPUT_DIR="build-info"
 CORES=$(nproc)
 

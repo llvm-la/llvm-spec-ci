@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="${LLVM_BUILD_DIR:-/tmp/llvm-spec-build}"
-SPEC_DIR="repos/cpu2017"
+SPEC_DIR="$(readlink -f repos/cpu2017)"
 CFG_FILE="$PROJECT_DIR/cfg/clang-2017.cfg"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 RUNGUID="${SPEC_RUNGUID:-$(date +%Y%m%d)-clang-loongarch-$TIMESTAMP"}
