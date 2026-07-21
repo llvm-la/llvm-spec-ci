@@ -17,7 +17,7 @@ check() {
 }
 
 # Check SPEC symlink targets exist
-for suite in cpu2017 cpu2006; do
+for suite in cpu2017 cpu2006 llvm-project; do
   link="repos/$suite"
   if [ -L "$link" ]; then
     target=$(readlink -f "$link")

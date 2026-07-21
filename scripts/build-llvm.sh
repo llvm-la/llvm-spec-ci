@@ -4,7 +4,7 @@ set -euo pipefail
 # Build LLVM clang + flang from main branch (Release, LoongArch target)
 
 BUILD_DIR="${LLVM_BUILD_DIR:-/tmp/llvm-spec-build}"
-SRC_DIR="${LLVM_SRC_DIR:-/tmp/llvm-project}"
+SRC_DIR="${LLVM_SRC_DIR:-repos/llvm-project}"
 OUTPUT_DIR="build-info"
 CORES=$(nproc)
 
@@ -15,14 +15,13 @@ echo "Cores:  $CORES"
 
 # Step 1: Checkout or update LLVM main branch
 if [ -d "$SRC_DIR/.git" ]; then
-  echo "[INFO] Updating existing LLVM checkout..."
+  echo "[INFO] Updating existing LLVM checkout via git pull..."
   cd "$SRC_DIR"
-  git fetch --force origin main
-  git reset --hard origin/main
+  git pull origin main
 else
   echo "[INFO] Cloning LLVM project (main branch, single branch)..."
   rm -rf "$SRC_DIR"
-  git clone --depth=1 --branch=main https://github.com/llvm/llvm-project.git "$SRC_DIR"
+  git clone --branch=main https://github.com/llvm/llvm-project.git "$SRC_DIR"
   cd "$SRC_DIR"
 fi
 

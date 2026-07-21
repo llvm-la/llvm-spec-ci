@@ -10,8 +10,8 @@ Automated SPEC CPU 2017 & 2006 benchmark CI on a self-hosted LoongArch (龙芯) 
 
 ```
 scripts/
-  setup-env.sh       # Pre-flight: SPEC symlinks, license, disk space, build deps
-  build-llvm.sh       # Checkout LLVM main, ninja Release build (clang + flang, LoongArch)
+  setup-env.sh       # Pre-flight: repos symlinks, license, disk space, build deps
+  build-llvm.sh       # git pull repos/llvm-project, ninja Release build (clang + flang, LoongArch)
   run-spec2017.sh     # Iterate cfg files matching *2017*, run each with SPEC 2017
   run-spec2006.sh     # Iterate cfg files matching *2006*, run each with SPEC 2006
   generate-report.sh  # Parse SPEC HTML output, produce summary index.html
@@ -19,8 +19,9 @@ cfg/
   *2017*.cfg          # SPEC 2017 compiler configs (naming convention: 2017-<name>.cfg)
   *2006*.cfg          # SPEC 2006 compiler configs (naming convention: 2006-<name>.cfg)
 repos/
-  cpu2017 -> <local>  # Symlink to SPEC CPU 2017 installation (NOT in git)
-  cpu2006 -> <local>  # Symlink to SPEC CPU 2006 installation (NOT in git)
+  llvm-project -> <local>  # LLVM source, updated via git pull (NOT actions/checkout)
+  cpu2017 -> <local>       # Symlink to SPEC CPU 2017 installation (NOT in git)
+  cpu2006 -> <local>       # Symlink to SPEC CPU 2006 installation (NOT in git)
 ```
 
 ## Key Design Details
@@ -37,7 +38,7 @@ repos/
 - SPEC license is pre-activated on the runner (no config needed).
 
 ### Build Script
-- `build-llvm.sh`: checkout/update LLVM main → cmake (Release, LoongArch, clang+flang only) → ninja `clang flang` → `ninja install-cli`.
+- `build-llvm.sh`: git pull repos/llvm-project → cmake (Release, LoongArch, clang+flang only) → ninja `clang flang` → `ninja install-cli`.
 - Outputs `build-info/info.json` with commit hash, versions, paths. Used by downstream jobs and report generation.
 - Uses ccache via `CMAKE_*_COMPILER_LAUNCHER` for incremental speedup.
 
@@ -57,7 +58,7 @@ repos/
 | Variable | Default | Description |
 |---|---|---|
 | `LLVM_BUILD_DIR` | `/tmp/llvm-spec-build` | LLVM build output directory |
-| `LLVM_SRC_DIR` | `/tmp/llvm-project` | LLVM source checkout directory |
+| `LLVM_SRC_DIR` | `repos/llvm-project` | LLVM source directory (updated via git pull, not checkout) |
 | `SPEC_RUNGUID` | auto-generated | SPEC run GUID prefix |
 
 ## Common Commands
@@ -78,7 +79,7 @@ SPEC2017_ONLY=602.gcc_r ./scripts/run-spec2017.sh
 
 ## Constraints
 
-- **SPEC source safety**: `repos/` content is gitignored. Only symlinks exist locally. Never commit SPEC binaries/data.
+- **Repos safety**: `repos/` content is gitignored (llvm-project, cpu2017, cpu2006). Never touch with `actions/checkout` (clean: false on the setup-env checkout). llvm-project updated via `git pull`, not clone.
 - **Single runner**: self-hosted, serial execution despite parallel job definitions.
 - **Build size**: LLVM build uses ~50G disk. SPEC runs may take 24+ hours for full suite.
 - **Architecture**: LoongArch (loongarch64), kernel 4.19.0-19-loongson-3.
