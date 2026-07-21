@@ -28,6 +28,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           clean: false
+      - name: Clean previous SPEC artifacts
+        run: |
+          echo "[INFO] Cleaning SPEC 2017 benchmark artifacts..."
+          for D in repos/cpu2017/benchspec/CPU/"*"/*/; do
+            [ -d "$D" ] && rm -rf "$D/build" "$D/run" "$D/exe"
+          done
+          echo "[INFO] Cleaning SPEC 2006 benchmark artifacts..."
+          for D in repos/cpu2006/benchspec/CPU2006/"*"/*/; do
+            [ -d "$D" ] && rm -rf "$D/build" "$D/run" "$D/exe"
+          done
       - name: Check environment
         run: ./scripts/setup-env.sh
 
