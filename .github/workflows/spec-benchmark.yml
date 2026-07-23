@@ -48,12 +48,11 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 480
     steps:
-      - name: Initialize ccache
+      - name: Initialize sccache
         run: |
-          mkdir -p ${{ runner.temp }}/.ccache
-          export CCACHE_DIR="${{ runner.temp }}/.ccache"
-          ccache --max-size=50G || true
-          ccache --show-stats || true
+          export SCCACHE_DIR="${{ github.workspace }}/.sccache"
+          mkdir -p "$SCCACHE_DIR"
+          sccache --show-stats || true
       - name: Build LLVM from main
         run: ./scripts/build-llvm.sh
 

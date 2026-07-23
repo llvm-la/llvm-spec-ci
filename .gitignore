@@ -16,6 +16,7 @@ build-llvm/
 # LLVM build cache
 .ccachefile*
 .ccachestats*
+.sccache/
 
 # OS files
 .DS_Store
