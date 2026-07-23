@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-BUILD_DIR="${LLVM_BUILD_DIR:-/tmp/llvm-spec-build}"
+BUILD_DIR="${LLVM_BUILD_DIR:-build-llvm}"
 SPEC_DIR="$(readlink -f repos/cpu2006)"
 CFG_FILE="$PROJECT_DIR/cfg/clang-2006.cfg"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)

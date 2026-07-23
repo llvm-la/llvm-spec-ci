@@ -57,7 +57,7 @@ repos/
 
 | Variable | Default | Description |
 |---|---|---|
-| `LLVM_BUILD_DIR` | `/tmp/llvm-spec-build` | LLVM build output directory |
+| `LLVM_BUILD_DIR` | `build-llvm` | LLVM build output directory (under project root) |
 | `LLVM_SRC_DIR` | `repos/llvm-project` | LLVM source directory (updated via git pull, not checkout) |
 | `SPEC_RUNGUID` | auto-generated | SPEC run GUID prefix |
 

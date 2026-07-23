@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Build LLVM clang + flang from main branch (Release, LoongArch target)
 
-BUILD_DIR="${LLVM_BUILD_DIR:-/tmp/llvm-spec-build}"
+BUILD_DIR="${LLVM_BUILD_DIR:-build-llvm}"
 SRC_DIR="$(readlink -f "${LLVM_SRC_DIR:-repos/llvm-project}")"
 OUTPUT_DIR="build-info"
 CORES=$(nproc)
@@ -46,6 +46,7 @@ cmake -G Ninja "$SRC_DIR/llvm" \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_OPTIMIZED_TABLEGEN=ON \
   -DLLVM_PARALLEL_LINK_JOBS=2 \
+  -DLLVM_ENABLE_SHARED_LIBS=true \
   -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/install"
 
 echo "[INFO] CMake configuration complete"

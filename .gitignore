@@ -10,6 +10,9 @@ results/
 *.tar
 *.zip
 
+# LLVM build directory
+build-llvm/
+
 # LLVM build cache
 .ccachefile*
 .ccachestats*

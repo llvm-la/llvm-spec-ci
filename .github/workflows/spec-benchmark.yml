@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  LLVM_BUILD_DIR: /tmp/llvm-spec-build
+  LLVM_BUILD_DIR: build-llvm
 
 jobs:
   setup-env:
