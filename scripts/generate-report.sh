@@ -169,3 +169,81 @@ if [ -n "$SPEC2006_DIR" ] && [ -d "$SPEC2006_DIR" ]; then
   mkdir -p "$OUTPUT_DIR/spec2006-detail/$CFG_NAME"
   cp -r "$SPEC2006_DIR" "$OUTPUT_DIR/spec2006-detail/$CFG_NAME/" 2>/dev/null || true
 fi
+
+# Append scores to history.json for online comparison
+HISTORY_FILE="$OUTPUT_DIR/history.json"
+TODAY=$(date +%Y-%m-%d)
+
+# Extract score value from SPEC result html by pattern
+get_score() {
+  local html_file="$1"
+  local pattern="$2"
+  if [ -f "$html_file" ]; then
+    grep -oP "${pattern}[^<]*\K[\d.]+" "$html_file" 2>/dev/null | head -1 || echo "null"
+  else
+    echo "null"
+  fi
+}
+
+# Build scores object (null if not available, allowing missing benchmarks)
+SCORES_2017=""
+if [ -n "$SPEC2017_RESULT" ] && [ -f "$SPEC2017_RESULT" ]; then
+  S_IR=$(get_score "$SPEC2017_RESULT" 'SPECrate2017_int')
+  S_FR=$(get_score "$SPEC2017_RESULT" 'SPECrate2017_fp')
+  S_IS=$(get_score "$SPEC2017_RESULT" 'SPECspeed2017_int')
+  S_FS=$(get_score "$SPEC2017_RESULT" 'SPECspeed2017_fp')
+  SCORES_2017="\"SPECrate2017_int\": $S_IR, \"SPECrate2017_fp\": $S_FR, \"SPECspeed2017_int\": $S_IS, \"SPECspeed2017_fp\": $S_FS"
+fi
+
+SCORES_2006=""
+if [ -n "$SPEC2006_RESULT" ] && [ -f "$SPEC2006_RESULT" ]; then
+  S_IR=$(get_score "$SPEC2006_RESULT" 'SPECint_rate2006')
+  S_FR=$(get_score "$SPEC2006_RESULT" 'SPECfp_rate2006')
+  S_IS=$(get_score "$SPEC2006_RESULT" 'SPECint_speed2006')
+  S_FS=$(get_score "$SPEC2006_RESULT" 'SPECfp_speed2006')
+  SCORES_2006="\"SPECint_rate2006\": $S_IR, \"SPECfp_rate2006\": $S_FR, \"SPECint_speed2006\": $S_IS, \"SPECfp_speed2006\": $S_FS"
+fi
+
+# Combine scores
+ALL_SCORES=""
+if [ -n "$SCORES_2017" ] && [ -n "$SCORES_2006" ]; then
+  ALL_SCORES="$SCORES_2017, $SCORES_2006"
+elif [ -n "$SCORES_2017" ]; then
+  ALL_SCORES="$SCORES_2017"
+elif [ -n "$SCORES_2006" ]; then
+  ALL_SCORES="$SCORES_2006"
+fi
+
+# Config name (if available)
+CFG_NAME_VAL="null"
+if [ -n "$SPEC2017_DIR" ]; then
+  CFG_NAME_VAL="\"$(basename "$(dirname "$SPEC2017_DIR")")\""
+elif [ -n "$SPEC2006_DIR" ]; then
+  CFG_NAME_VAL="\"$(basename "$(dirname "$SPEC2006_DIR")")\""
+fi
+
+# Build the new history entry
+NEW_ENTRY=$(cat <<ENTRY
+{
+  "date": "$TODAY",
+  "datetime": "$TIMESTAMP",
+  "llvm_commit": "${LLVM_COMMIT:-null}",
+  "llvm_short": "${LLVM_SHORT:-null}",
+  "clang_version": "${CLANG_VER:-null}",
+  "flang_version": "${FLANG_VER:-null}",
+  "config": $CFG_NAME_VAL,
+  "scores": { $ALL_SCORES }
+}
+ENTRY
+)
+
+# Initialize history file if it doesn't exist
+if [ ! -f "$HISTORY_FILE" ]; then
+  echo "[]" > "$HISTORY_FILE"
+fi
+
+# Append entry: read existing, remove trailing ], add comma + new entry, close ]
+TMP_FILE=$(mktemp)
+jq ". + [$NEW_ENTRY]" "$HISTORY_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$HISTORY_FILE"
+
+echo "[OK] Score history updated at $HISTORY_FILE"

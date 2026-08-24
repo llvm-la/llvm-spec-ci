@@ -46,6 +46,14 @@ repos/
 - `generate-report.sh`: reads `build-info/info.json` + finds SPEC HTML results → generates `results/latest/index.html`.
 - Uses `grep -oP` to extract SPECrate/SPECspeed scores from SPEC HTML output. Depends on `jq` for build info.
 - Copies detailed SPEC reports into `results/latest/spec2017-detail/<config-name>/` and `results/latest/spec2006-detail/<config-name>/`.
+- Appends scores to `results/latest/history.json` for online comparison (handles missing benchmarks as null).
+
+### Online Comparison (`results/compare.html`)
+- Static HTML page hosted on GitHub Pages for comparing scores across runs.
+- Loads `history.json` via fetch, populates two dropdown selectors.
+- Displays side-by-side comparison table with absolute diff and percentage change.
+- Missing benchmarks (null scores) show N/A and are excluded from diff calculation.
+- Pure client-side JavaScript, no build step or dependencies.
 
 ### Workflow (`.github/workflows/spec-benchmark.yml`)
 - Chain: `setup-env` → `build-llvm` → `run-spec2017` → `run-spec2006` → `generate-report` (fully serial to avoid benchmark interference).

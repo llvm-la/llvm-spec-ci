@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPEC CPU 成绩对比</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace, sans-serif;
+      margin: 0; padding: 20px 40px;
+      background: #1e1e1e; color: #d4d4d4;
+      min-height: 100vh;
+    }
+    h1 { color: #569cd6; border-bottom: 1px solid #3c3c3c; padding-bottom: 10px; }
+    h2 { color: #4ec9b0; margin-top: 30px; }
+    .controls {
+      background: #252526; padding: 20px; border-radius: 8px;
+      margin: 20px 0; display: flex; gap: 30px; flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .control-group { display: flex; flex-direction: column; gap: 6px; }
+    label { color: #9cdcfe; font-size: 0.85em; font-weight: 600; }
+    select, button {
+      background: #3c3c3c; color: #d4d4d4; border: 1px solid #555;
+      padding: 8px 14px; border-radius: 4px; font-size: 0.95em;
+      min-width: 220px; cursor: pointer;
+    }
+    select:hover, button:hover { background: #4c4c4c; border-color: #569cd6; }
+    button {
+      background: #0e639c; border-color: #0e639c; color: white;
+      font-weight: 600; min-width: auto; padding: 8px 24px;
+    }
+    button:hover { background: #1177bb; }
+    .run-info {
+      background: #252526; padding: 12px 16px; border-radius: 6px;
+      margin: 10px 0; font-size: 0.9em; line-height: 1.6;
+    }
+    .run-info .label { color: #9cdcfe; }
+    .run-info .value { color: #ce9178; }
+    .run-info a { color: #569cd6; text-decoration: none; }
+    .run-info a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+    th, td { border: 1px solid #3c3c3c; padding: 10px 14px; text-align: center; }
+    th { background: #2d2d30; color: #569cd6; font-weight: 600; }
+    td:first-child { text-align: left; font-weight: 500; color: #9cdcfe; }
+    tr:nth-child(even) { background: #252526; }
+    tr:hover { background: #2a2d2e; }
+    .up { color: #4ec9b0; font-weight: bold; }
+    .down { color: #f44747; font-weight: bold; }
+    .na { color: #808080; font-style: italic; }
+    .no-diff { color: #808080; }
+    .summary {
+      background: #252526; padding: 15px 20px; border-radius: 8px;
+      margin: 20px 0; line-height: 1.8;
+    }
+    .summary .improvements { color: #4ec9b0; }
+    .summary .regressions { color: #f44747; }
+    .summary .unchanged { color: #808080; }
+    .summary .missing { color: #dcdcaa; }
+    .loading { text-align: center; padding: 60px; color: #808080; font-size: 1.1em; }
+    .error { background: #5a1d1d; padding: 20px; border-radius: 8px; color: #f48771; margin: 20px 0; }
+    .footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #3c3c3c; font-size: 0.9em; }
+    .hidden { display: none; }
+    .swap-btn {
+      background: transparent; border: 1px solid #555; color: #d4d4d4;
+      min-width: auto; padding: 8px 12px; font-size: 1.2em;
+    }
+    .swap-btn:hover { background: #3c3c3c; }
+  </style>
+</head>
+<body>
+  <h1>SPEC CPU 成绩在线对比</h1>
+  <p style="color: #808080;">从 history.json 加载历史数据，选择两期进行对比。缺项显示 N/A。</p>
+
+  <div class="controls">
+    <div class="control-group">
+      <label for="run1">基准 (Base)</label>
+      <select id="run1"></select>
+    </div>
+    <div class="control-group">
+      <label for="run2">对比 (Compare)</label>
+      <select id="run2"></select>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="swap-btn" onclick="swapRuns()" title="交换">⇄</button>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button onclick="compare()">对比</button>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">正在加载 history.json ...</div>
+  <div id="error" class="error hidden"></div>
+  <div id="results" class="hidden">
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div class="run-info" id="info1" style="flex: 1; min-width: 280px;"></div>
+      <div class="run-info" id="info2" style="flex: 1; min-width: 280px;"></div>
+    </div>
+
+    <div id="summary" class="summary"></div>
+
+    <h2>详细对比</h2>
+    <table id="compare-table">
+      <thead>
+        <tr>
+          <th>子项</th>
+          <th id="col-base">基准</th>
+          <th id="col-compare">对比</th>
+          <th>差值</th>
+          <th>变化</th>
+        </tr>
+      </thead>
+      <tbody id="compare-body"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p style="color: #808080;">SPEC CPU 在线对比 | 数据来自 history.json</p>
+  </div>
+
+  <script>
+    let historyData = [];
+
+    // Load history.json
+    async function loadHistory() {
+      try {
+        const resp = await fetch('history.json', { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        historyData = await resp.json();
+        if (!Array.isArray(historyData) || historyData.length === 0) {
+          throw new Error('history.json 为空，需要先运行至少一次 SPEC 测试');
+        }
+        // Sort by date descending
+        historyData.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        populateSelectors();
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('results').classList.remove('hidden');
+        // Auto-compare last two runs if available
+        if (historyData.length >= 2) {
+          document.getElementById('run1').value = '0';
+          document.getElementById('run2').value = '1';
+          compare();
+        }
+      } catch (e) {
+        document.getElementById('loading').classList.add('hidden');
+        const errDiv = document.getElementById('error');
+        errDiv.textContent = '加载失败: ' + e.message;
+        errDiv.classList.remove('hidden');
+      }
+    }
+
+    function populateSelectors() {
+      const run1 = document.getElementById('run1');
+      const run2 = document.getElementById('run2');
+      historyData.forEach((entry, i) => {
+        const label = formatRunLabel(entry);
+        run1.add(new Option(label, i));
+        run2.add(new Option(label, i));
+      });
+      // Default: run1 = oldest, run2 = newest
+      if (historyData.length >= 2) {
+        run1.value = String(historyData.length - 1);
+        run2.value = '0';
+      }
+    }
+
+    function formatRunLabel(entry) {
+      let label = entry.date || 'unknown';
+      if (entry.config && entry.config !== 'null') label += ` [${entry.config}]`;
+      if (entry.llvm_short && entry.llvm_short !== 'null') label += ` ${entry.llvm_short}`;
+      return label;
+    }
+
+    function swapRuns() {
+      const run1 = document.getElementById('run1');
+      const run2 = document.getElementById('run2');
+      const tmp = run1.value;
+      run1.value = run2.value;
+      run2.value = tmp;
+      compare();
+    }
+
+    function compare() {
+      const idx1 = parseInt(document.getElementById('run1').value);
+      const idx2 = parseInt(document.getElementById('run2').value);
+      const base = historyData[idx1];
+      const compare = historyData[idx2];
+
+      if (!base || !compare) return;
+
+      // Update column headers
+      document.getElementById('col-base').textContent = formatRunLabel(base);
+      document.getElementById('col-compare').textContent = formatRunLabel(compare);
+
+      // Show run info
+      showRunInfo('info1', base, '基准');
+      showRunInfo('info2', compare, '对比');
+
+      // Build comparison table
+      const baseScores = base.scores || {};
+      const compareScores = compare.scores || {};
+
+      // Collect all unique benchmark keys
+      const allKeys = new Set([...Object.keys(baseScores), ...Object.keys(compareScores)]);
+      const sortedKeys = [...allKeys].sort();
+
+      const tbody = document.getElementById('compare-body');
+      tbody.innerHTML = '';
+
+      let improvements = 0, regressions = 0, unchanged = 0, missing = 0;
+
+      sortedKeys.forEach(key => {
+        const baseVal = baseScores[key];
+        const compareVal = compareScores[key];
+
+        const baseDisplay = formatScore(baseVal);
+        const compareDisplay = formatScore(compareVal);
+
+        let diffClass = 'no-diff';
+        let diffText = '—';
+        let pctText = '—';
+
+        if (baseVal == null || compareVal == null || baseVal === 'null' || compareVal === 'null') {
+          diffClass = 'na';
+          diffText = 'N/A';
+          pctText = 'N/A';
+          missing++;
+        } else {
+          const b = parseFloat(baseVal);
+          const c = parseFloat(compareVal);
+          const diff = c - b;
+          const pct = ((diff / b) * 100).toFixed(2);
+
+          if (Math.abs(diff) < 0.001) {
+            diffClass = 'no-diff';
+            diffText = '0.00';
+            pctText = '0.00%';
+            unchanged++;
+          } else if (diff > 0) {
+            diffClass = 'up';
+            diffText = '+' + diff.toFixed(2);
+            pctText = '+' + pct + '%';
+            improvements++;
+          } else {
+            diffClass = 'down';
+            diffText = diff.toFixed(2);
+            pctText = pct + '%';
+            regressions++;
+          }
+        }
+
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${formatBenchmarkName(key)}</td>
+          <td>${baseDisplay}</td>
+          <td>${compareDisplay}</td>
+          <td class="${diffClass}">${diffText}</td>
+          <td class="${diffClass}">${pctText}</td>
+        `;
+      });
+
+      // Summary
+      const summaryDiv = document.getElementById('summary');
+      let summaryHtml = '<strong>对比摘要：</strong> ';
+      const parts = [];
+      if (improvements > 0) parts.push(`<span class="improvements">${improvements} 项提升</span>`);
+      if (regressions > 0) parts.push(`<span class="regressions">${regressions} 项下降</span>`);
+      if (unchanged > 0) parts.push(`<span class="unchanged">${unchanged} 项持平</span>`);
+      if (missing > 0) parts.push(`<span class="missing">${missing} 项缺失（无法对比）</span>`);
+      summaryHtml += parts.join('，') || '无数据';
+      summaryDiv.innerHTML = summaryHtml;
+    }
+
+    function formatScore(val) {
+      if (val == null || val === 'null' || val === null) return '<span class="na">N/A</span>';
+      const num = parseFloat(val);
+      if (isNaN(num)) return '<span class="na">N/A</span>';
+      return num.toFixed(2);
+    }
+
+    function formatBenchmarkName(key) {
+      // Convert SPECrate2017_int to readable form
+      const nameMap = {
+        'SPECrate2017_int': 'SPECrate2017 int',
+        'SPECrate2017_fp': 'SPECrate2017 fp',
+        'SPECspeed2017_int': 'SPECspeed2017 int',
+        'SPECspeed2017_fp': 'SPECspeed2017 fp',
+        'SPECint_rate2006': 'SPECint_rate2006',
+        'SPECfp_rate2006': 'SPECfp_rate2006',
+        'SPECint_speed2006': 'SPECint_speed2006',
+        'SPECfp_speed2006': 'SPECfp_speed2006',
+      };
+      return nameMap[key] || key;
+    }
+
+    function showRunInfo(elementId, entry, title) {
+      const div = document.getElementById(elementId);
+      let html = `<strong>${title}</strong><br>`;
+      html += `<span class="label">日期: </span><span class="value">${entry.date || 'N/A'}</span><br>`;
+      if (entry.config && entry.config !== 'null') {
+        html += `<span class="label">配置: </span><span class="value">${entry.config}</span><br>`;
+      }
+      if (entry.llvm_commit && entry.llvm_commit !== 'null') {
+        const commit = entry.llvm_commit;
+        const short = entry.llvm_short || commit.substring(0, 7);
+        html += `<span class="label">LLVM: </span><span class="value"><a href="https://github.com/llvm/llvm-project/commit/${commit}" target="_blank">${short}</a></span><br>`;
+      }
+      if (entry.clang_version && entry.clang_version !== 'null') {
+        html += `<span class="label">Clang: </span><span class="value">${entry.clang_version}</span><br>`;
+      }
+      div.innerHTML = html;
+    }
+
+    // Initialize
+    loadHistory();
+  </script>
+</body>
+</html>
