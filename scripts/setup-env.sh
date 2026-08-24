@@ -50,11 +50,12 @@ else
 fi
 
 # Check disk space (require at least 50G free)
+# df --output=avail returns 1K blocks, so 50G = 52428800 blocks
 avail=$(df --output=avail / | tail -1 | tr -d ' ')
-if [ "$avail" -gt 51200 ]; then
-  echo "[OK] Disk space: $((avail / 1024))G available"
+if [ "$avail" -gt 52428800 ]; then
+  echo "[OK] Disk space: $((avail / 1048576))G available"
 else
-  echo "[FAIL] Disk space insufficient: $((avail / 1024))G available (need >50G)"
+  echo "[FAIL] Disk space insufficient: $((avail / 1048576))G available (need >50G)"
   FAIL=1
 fi
 

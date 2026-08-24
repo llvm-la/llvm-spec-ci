@@ -70,7 +70,7 @@ jobs:
 
   run-spec2006:
     name: Run SPEC CPU 2006
-    needs: build-llvm
+    needs: run-spec2017
     runs-on: self-hosted
     timeout-minutes: 1440
     steps:
@@ -87,7 +87,7 @@ jobs:
 
   generate-report:
     name: Generate Report
-    needs: [run-spec2017, run-spec2006]
+    needs: run-spec2006
     runs-on: self-hosted
     if: always()
     timeout-minutes: 30

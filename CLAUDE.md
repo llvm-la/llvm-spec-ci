@@ -12,8 +12,8 @@ Automated SPEC CPU 2017 & 2006 benchmark CI on a self-hosted LoongArch (龙芯) 
 scripts/
   setup-env.sh       # Pre-flight: repos symlinks, license, disk space, build deps
   build-llvm.sh       # git pull repos/llvm-project, ninja Release build (clang + flang, LoongArch)
-  run-spec2017.sh     # Iterate cfg files matching *2017*, run each with SPEC 2017
-  run-spec2006.sh     # Iterate cfg files matching *2006*, run each with SPEC 2006
+  run-spec2017.sh     # Discover cfg/*2017*.cfg, run each with SPEC 2017
+  run-spec2006.sh     # Discover cfg/*2006*.cfg, run each with SPEC 2006
   generate-report.sh  # Parse SPEC HTML output, produce summary index.html
 cfg/
   *2017*.cfg          # SPEC 2017 compiler configs (naming convention: 2017-<name>.cfg)
@@ -27,27 +27,28 @@ repos/
 ## Key Design Details
 
 ### Config Files (`cfg/`)
-- All configs use `@@BUILD_DIR@@` as a placeholder for the LLVM install path. Run scripts `sed` this at runtime.
+- All configs use `@@BUILD_DIR@@` as a placeholder for the LLVM build path (binaries are in `$BUILD_DIR/bin`). Run scripts `sed` this at runtime.
 - Naming convention: `2017-<name>.cfg` for SPEC 2017, `2006-<name>.cfg` for SPEC 2006.
-- Run scripts auto-discover matching configs (`cfg/*2017*.cfg` / `cfg/*2006*.cfg`) and run each sequentially.
-- Configs vary by optimization flags (O2, O3, Ofast, -mlasx, -nolsx, etc.).
+- Run scripts auto-discover matching configs (`cfg/*2017*.cfg` / `cfg/*2006*.cfg`) and run each sequentially with a unique RUNGUID per config.
+- Results are namespaced per config under `results/spec{2017,2006}/<config-name>/`.
+- Per-benchmark overrides use SPEC native syntax: `benchmark_name = base,peak: { ... }` placed at the bottom of the cfg file. Global defaults are inherited; only exceptions need override blocks.
 
 ### Run Scripts
-- `run-spec2017.sh` / `run-spec2006.sh`: loop over all matching configs in `cfg/`, set a unique RUNGUID per config, invoke `runspec`, and copy results to `results/spec{2017,2006}/`.
+- `run-spec2017.sh` / `run-spec2006.sh`: loop over all matching configs in `cfg/`, set a unique RUNGUID per config, invoke `runspec`, and copy results to `results/spec{2017,2006}/<config-name>/`.
 - Use `--norerun` to prevent infinite rerun loops. Use `--size=ref` for reference dataset.
 - SPEC license is pre-activated on the runner (no config needed).
 
 ### Build Script
-- `build-llvm.sh`: git pull repos/llvm-project → cmake (Release, LoongArch, clang+flang only) → ninja `clang flang` → `ninja install-cli`.
+- `build-llvm.sh`: git pull repos/llvm-project → cmake (Release, LoongArch, clang+flang only) → ninja `clang flang`. No install step; binaries are used directly from `build-llvm/bin/`.
 - Outputs `build-info/info.json` with commit hash, versions, paths. Used by downstream jobs and report generation.
-- Uses ccache via `CMAKE_*_COMPILER_LAUNCHER` for incremental speedup.
 
 ### Report Script
 - `generate-report.sh`: reads `build-info/info.json` + finds SPEC HTML results → generates `results/latest/index.html`.
 - Uses `grep -oP` to extract SPECrate/SPECspeed scores from SPEC HTML output. Depends on `jq` for build info.
+- Copies detailed SPEC reports into `results/latest/spec2017-detail/<config-name>/` and `results/latest/spec2006-detail/<config-name>/`.
 
 ### Workflow (`.github/workflows/spec-benchmark.yml`)
-- Chain: `setup-env` → `build-llvm` → `run-spec2017` + `run-spec2006` (parallel on same runner) → `generate-report`.
+- Chain: `setup-env` → `build-llvm` → `run-spec2017` → `run-spec2006` → `generate-report` (fully serial to avoid benchmark interference).
 - Timeouts: 10m (env check), 480m (LLVM build), 1440m per SPEC run, 30m (report).
 - `generate-report` uses `if: always()` to run even if SPEC jobs fail (partial results).
 - Artifacts retained 90 days. Deployed to GitHub Pages on `main` branch.
@@ -70,8 +71,8 @@ repos/
 # Build LLVM locally
 ./scripts/build-llvm.sh
 
-# Run SPEC suite with a single config (test)
-SPEC2017_ONLY=602.gcc_r ./scripts/run-spec2017.sh
+# Run SPEC 2017 suite (all matching configs)
+./scripts/run-spec2017.sh
 
 # Generate report from existing results
 ./scripts/generate-report.sh
@@ -80,6 +81,6 @@ SPEC2017_ONLY=602.gcc_r ./scripts/run-spec2017.sh
 ## Constraints
 
 - **Repos safety**: `repos/` content is gitignored (llvm-project, cpu2017, cpu2006). Never touch with `actions/checkout` (clean: false on the setup-env checkout). llvm-project updated via `git pull`, not clone.
-- **Single runner**: self-hosted, serial execution despite parallel job definitions.
+- **Single runner**: self-hosted, fully serial execution (SPEC 2017 → SPEC 2006 → report).
 - **Build size**: LLVM build uses ~50G disk. SPEC runs may take 24+ hours for full suite.
 - **Architecture**: LoongArch (loongarch64), kernel 4.19.0-19-loongson-3.

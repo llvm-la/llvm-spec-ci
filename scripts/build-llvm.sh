@@ -15,8 +15,10 @@ echo "Cores:  $CORES"
 
 # Step 1: Checkout or update LLVM main branch
 if [ -d "$SRC_DIR/.git" ]; then
-  echo "[INFO] Updating existing LLVM checkout via git pull..."
+  echo "[INFO] Updating existing LLVM checkout..."
   cd "$SRC_DIR"
+  # Ensure we are on the main branch (handles detached HEAD)
+  git symbolic-ref --quiet HEAD 2>/dev/null || git checkout main
   git pull origin main
 else
   echo "[INFO] Cloning LLVM project (main branch, single branch)..."
@@ -39,13 +41,12 @@ cmake -G Ninja "$SRC_DIR/llvm" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=clang \
   -DCMAKE_CXX_COMPILER=clang++ \
-    -DLLVM_TARGETS_TO_BUILD=LoongArch \
+  -DLLVM_TARGETS_TO_BUILD=LoongArch \
   -DLLVM_ENABLE_PROJECTS="clang;flang" \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_OPTIMIZED_TABLEGEN=ON \
   -DLLVM_PARALLEL_LINK_JOBS=2 \
-  -DLLVM_ENABLE_SHARED_LIBS=true \
-  -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/install"
+  -DLLVM_ENABLE_SHARED_LIBS=true
 
 echo "[INFO] CMake configuration complete"
 
@@ -53,11 +54,7 @@ echo "[INFO] CMake configuration complete"
 echo "[INFO] Building clang and flang with $CORES jobs..."
 ninja clang flang
 
-# Step 4: Install to local prefix
-echo "[INFO] Installing to $BUILD_DIR/install ..."
-ninja install-cli
-
-# Step 5: Verify build
+# Step 4: Verify build
 CLANG_BIN="$BUILD_DIR/bin/clang"
 FLANG_BIN="$BUILD_DIR/bin/flang"
 
@@ -91,7 +88,6 @@ cat > "$OUTPUT_DIR/info.json" <<EOF
   "projects": "clang;flang",
   "clang_version": "$($CLANG_BIN --version | head -1)",
   "flang_version": "$($FLANG_BIN --version | head -1)",
-  "install_prefix": "$BUILD_DIR/install",
   "build_dir": "$BUILD_DIR",
   "build_date": "$(date +%Y-%m-%d)"
 }

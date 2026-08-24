@@ -51,15 +51,21 @@ SPEC2017_DIR=""
 SPEC2006_DIR=""
 SPEC2017_RATE="N/A"
 SPEC2006_RATE="N/A"
+SPEC2017_LINK=""
+SPEC2006_LINK=""
 
 if [ -n "$SPEC2017_RESULT" ]; then
   SPEC2017_DIR=$(dirname "$SPEC2017_RESULT")
   SPEC2017_RATE=$(extract_spec_rate "$SPEC2017_DIR")
+  CFG_NAME=$(basename "$(dirname "$SPEC2017_DIR")")
+  SPEC2017_LINK="spec2017-detail/$CFG_NAME/index.html"
 fi
 
 if [ -n "$SPEC2006_RESULT" ]; then
   SPEC2006_DIR=$(dirname "$SPEC2006_RESULT")
   SPEC2006_RATE=$(extract_spec_rate "$SPEC2006_DIR")
+  CFG_NAME=$(basename "$(dirname "$SPEC2006_DIR")")
+  SPEC2006_LINK="spec2006-detail/$CFG_NAME/index.html"
 fi
 
 # Get hardware info
@@ -127,7 +133,7 @@ cat > "$OUTPUT_DIR/index.html" <<HTMLEOF
       <tr><td>SPECspeed2017_int</td><td class="score">$(grep -oP 'SPECspeed2017_int[^<]*\K[\d.]+' "$SPEC2017_RESULT" 2>/dev/null || echo "N/A")</td></tr>
       <tr><td>SPECspeed2017_fp</td><td class="score">$(grep -oP 'SPECspeed2017_fp[^<]*\K[\d.]+' "$SPEC2017_RESULT" 2>/dev/null || echo "N/A")</td></tr>
     </table>
-    ${SPEC2017_DIR:+<p><a href="${SPEC2017_DIR#/}">View full SPEC 2017 HTML report</a></p>}
+    ${SPEC2017_LINK:+<p><a href="$SPEC2017_LINK">View full SPEC 2017 HTML report</a></p>}
   </div>
 
   <div class="section">
@@ -139,7 +145,7 @@ cat > "$OUTPUT_DIR/index.html" <<HTMLEOF
       <tr><td>SPECint_speed2006</td><td class="score">$(grep -oP 'SPECint_speed2006[^<]*\K[\d.]+' "$SPEC2006_RESULT" 2>/dev/null || echo "N/A")</td></tr>
       <tr><td>SPECfp_speed2006</td><td class="score">$(grep -oP 'SPECfp_speed2006[^<]*\K[\d.]+' "$SPEC2006_RESULT" 2>/dev/null || echo "N/A")</td></tr>
     </table>
-    ${SPEC2006_DIR:+<p><a href="${SPEC2006_DIR#/}">View full SPEC 2006 HTML report</a></p>}
+    ${SPEC2006_LINK:+<p><a href="$SPEC2006_LINK">View full SPEC 2006 HTML report</a></p>}
   </div>
 
   <div class="footer">
@@ -151,10 +157,15 @@ HTMLEOF
 
 echo "[OK] Summary report generated at $OUTPUT_DIR/index.html"
 
-# Copy SPEC detailed reports as subdirectories if available
+# Copy SPEC detailed reports as subdirectories if available.
+# Results are namespaced per config, so copy each into its own subdirectory.
 if [ -n "$SPEC2017_DIR" ] && [ -d "$SPEC2017_DIR" ]; then
-  cp -r "$SPEC2017_DIR" "$OUTPUT_DIR/spec2017-detail/" 2>/dev/null || true
+  CFG_NAME=$(basename "$(dirname "$SPEC2017_DIR")")
+  mkdir -p "$OUTPUT_DIR/spec2017-detail/$CFG_NAME"
+  cp -r "$SPEC2017_DIR" "$OUTPUT_DIR/spec2017-detail/$CFG_NAME/" 2>/dev/null || true
 fi
 if [ -n "$SPEC2006_DIR" ] && [ -d "$SPEC2006_DIR" ]; then
-  cp -r "$SPEC2006_DIR" "$OUTPUT_DIR/spec2006-detail/" 2>/dev/null || true
+  CFG_NAME=$(basename "$(dirname "$SPEC2006_DIR")")
+  mkdir -p "$OUTPUT_DIR/spec2006-detail/$CFG_NAME"
+  cp -r "$SPEC2006_DIR" "$OUTPUT_DIR/spec2006-detail/$CFG_NAME/" 2>/dev/null || true
 fi
