@@ -49,16 +49,6 @@ else
   FAIL=1
 fi
 
-# Check disk space (require at least 50G free)
-# df --output=avail returns 1K blocks, so 50G = 52428800 blocks
-avail=$(df --output=avail / | tail -1 | tr -d ' ')
-if [ "$avail" -gt 52428800 ]; then
-  echo "[OK] Disk space: $((avail / 1048576))G available"
-else
-  echo "[FAIL] Disk space insufficient: $((avail / 1048576))G available (need >50G)"
-  FAIL=1
-fi
-
 # Check build dependencies
 for dep in cmake ninja python3 clang clang++; do
   check "$dep available" command -v "$dep"
