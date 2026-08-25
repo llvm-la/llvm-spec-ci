@@ -44,18 +44,18 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   source shrc
 
   # Run full SPECint + SPECfp
-  # Note: runcpu v6612 (SPEC 2017 v1.0.5) uses different option names:
-  #   --run_guid (not --runguid), no --norerun, --action=run (not compile,run)
+  # Note: runcpu v6612 (SPEC 2017 v1.0.5) does not support --runguid/--run_guid
+  # or --norerun. Use minimal options and let SPEC auto-name the result dir.
   ./bin/runcpu \
     --config=config/clang-loongarch.cfg \
-    --run_guid="$RUNGUID" \
     --action=run \
     --size=ref \
     SPECint SPECfp \
     --output_format=html
 
   # Copy results to project directory, namespaced per config
-  RESULTS_DIR=$(ls -td result/*clang-loongarch*${RUNGUID}* 2>/dev/null | head -1)
+  # Result dir pattern: result/<date>-<config>-<benchmark_set>
+  RESULTS_DIR=$(ls -td result/*clang-loongarch* 2>/dev/null | head -1)
   if [ -n "$RESULTS_DIR" ] && [ -d "$RESULTS_DIR" ]; then
     echo "[INFO] Results in: $RESULTS_DIR"
     mkdir -p "$PROJECT_DIR/results/spec2017/$CFG_NAME"

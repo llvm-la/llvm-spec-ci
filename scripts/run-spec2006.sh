@@ -45,17 +45,18 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   relocate
 
   # Run full specint + specfp
-  # Note: runspec uses --run_guid (not --runguid), no --norerun
+  # Note: runspec v6612 does not support --runguid/--run_guid or --norerun.
+  # Use minimal options and let SPEC auto-name the result dir.
   ./bin/runspec \
     --config=config/clang-loongarch.cfg \
-    --run_guid="$RUNGUID" \
     --action=run \
     --size=ref \
     specint specfp \
     --output_format=html
 
   # Copy results to project directory, namespaced per config
-  RESULTS_DIR=$(ls -td result/*clang-loongarch*${RUNGUID}* 2>/dev/null | head -1)
+  # Result dir pattern: result/<date>-<config>-<benchmark_set>
+  RESULTS_DIR=$(ls -td result/*clang-loongarch* 2>/dev/null | head -1)
   if [ -n "$RESULTS_DIR" ] && [ -d "$RESULTS_DIR" ]; then
     echo "[INFO] Results in: $RESULTS_DIR"
     mkdir -p "$PROJECT_DIR/results/spec2006/$CFG_NAME"
