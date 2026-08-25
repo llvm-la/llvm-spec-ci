@@ -6,8 +6,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-BUILD_DIR="${LLVM_BUILD_DIR:-build-llvm}"
-SPEC_DIR="$(readlink -f repos/cpu2017)"
+BUILD_DIR="$(readlink -f "${LLVM_BUILD_DIR:-$PROJECT_DIR/build-llvm}")"
+SPEC_DIR="$(readlink -f "$PROJECT_DIR/repos/cpu2017")"
 CFG_DIR="$PROJECT_DIR/cfg"
 
 echo "=== SPEC CPU 2017 Run Configuration ==="

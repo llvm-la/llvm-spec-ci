@@ -50,7 +50,7 @@ else
 fi
 
 # Check build dependencies
-for dep in cmake ninja python3 clang clang++; do
+for dep in cmake ninja python3 clang clang++ jq; do
   check "$dep available" command -v "$dep"
 done
 
