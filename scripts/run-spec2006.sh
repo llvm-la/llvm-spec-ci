@@ -45,11 +45,11 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   relocate
 
   # Run full specint + specfp
+  # Note: runspec uses --run_guid (not --runguid), no --norerun
   ./bin/runspec \
     --config=config/clang-loongarch.cfg \
-    --runguid="$RUNGUID" \
-    --norerun \
-    --action=compile,run \
+    --run_guid="$RUNGUID" \
+    --action=run \
     --size=ref \
     specint specfp \
     --output_format=html

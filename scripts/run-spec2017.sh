@@ -44,11 +44,12 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   source shrc
 
   # Run full SPECint + SPECfp
+  # Note: runcpu v6612 (SPEC 2017 v1.0.5) uses different option names:
+  #   --run_guid (not --runguid), no --norerun, --action=run (not compile,run)
   ./bin/runcpu \
     --config=config/clang-loongarch.cfg \
-    --runguid="$RUNGUID" \
-    --norerun \
-    --action=compile,run \
+    --run_guid="$RUNGUID" \
+    --action=run \
     --size=ref \
     SPECint SPECfp \
     --output_format=html
