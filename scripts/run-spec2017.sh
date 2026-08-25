@@ -47,14 +47,15 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   source shrc
 
   # Run full intrate + fprate
-  # Note: runcpu v6612 (SPEC 2017 v1.0.5) uses 'intrate'/'fprate' (not
-  # SPECint/SPECfp), and does not support --runguid/--run_guid or --norerun.
+  # Note: runcpu uses 'intrate'/'fprate' (not SPECint/SPECfp).
+  # --define build_ncpus sets make -j parallelism at runtime.
+  NCPUS=$(nproc)
   ./bin/runcpu \
     --config="$TMP_CFG" \
+    --define build_ncpus="$NCPUS" \
     --action=run \
     --size=ref \
-    intrate fprate \
-    --output_format=html
+    intrate fprate
 
   rm -f "$TMP_CFG"
 

@@ -28,10 +28,13 @@ repos/
 
 ### Config Files (`cfg/`)
 - All configs use `@@BUILD_DIR@@` as a placeholder for the LLVM build path (binaries are in `$BUILD_DIR/bin`). Run scripts `sed` this at runtime.
-- Naming convention: `2017-<name>.cfg` for SPEC 2017, `2006-<name>.cfg` for SPEC 2006.
-- Run scripts auto-discover matching configs (`cfg/*2017*.cfg` / `cfg/*2006*.cfg`) and run each sequentially with a unique RUNGUID per config.
+- Naming convention: `*-2017*.cfg` for SPEC 2017, `*-2006*.cfg` for SPEC 2006.
+- Run scripts auto-discover matching configs (`cfg/*2017*.cfg` / `cfg/*2006*.cfg`) and run each sequentially.
 - Results are namespaced per config under `results/spec{2017,2006}/<config-name>/`.
-- Per-benchmark overrides use SPEC native syntax: `benchmark_name = base,peak: { ... }` placed at the bottom of the cfg file. Global defaults are inherited; only exceptions need override blocks.
+- Run scripts pass `--define build_ncpus=$(nproc)` to use all available CPUs for make parallelism.
+- **SPEC 2017 format**: Uses preprocessor directives (`%define`, `%if`, `%endif`, `%{variable}`), sections `default:` / `default=base:` / `default=peak:`, and per-benchmark overrides like `500.perlbench_r,600.perlbench_s:`. Optimization vars: `OPTIMIZE`, `EXTRA_COPTIMIZE`, `EXTRA_CXXOPTIMIZE`, `EXTRA_FOPTIMIZE`. Portability: `PORTABILITY`, `CPORTABILITY`, `CXXPORTABILITY`, `FPORTABILITY`.
+- **SPEC 2006 format**: Uses four-field section headers `default=default=default=default:` (benchmark=tune=ext=default), and per-benchmark overrides like `400.perlbench=default=default=default:`. Optimization vars: `COPTIMIZE`, `CXXOPTIMIZE`, `FOPTIMIZE`. Portability: `CPORTABILITY`, `CXXPORTABILITY`, `FPORTABILITY`, `FPPPORTABILITY`.
+- Reference configs (on this system): `/home/user/code/llvm-spec-ci/clang-opt-before-lsx.cfg` (SPEC 2017 clang/flang), `/home/user/code/llvm-spec-ci/clang-loongarch-backcost-lsx.cfg` (SPEC 2006 clang/flang). SPEC upstream examples at `$SPEC/cpu2017/config/Example-*.cfg` and `$SPEC/cpu2006/config/`.
 
 ### Run Scripts
 - `run-spec2017.sh` / `run-spec2006.sh`: loop over all matching configs in `cfg/`, set a unique RUNGUID per config, invoke `runspec`, and copy results to `results/spec{2017,2006}/<config-name>/`.

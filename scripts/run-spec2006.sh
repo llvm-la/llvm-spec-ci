@@ -48,14 +48,14 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   relocate
 
   # Run full specint + specfp
-  # Note: runspec v6612 does not support --runguid/--run_guid or --norerun.
-  # Use minimal options and let SPEC auto-name the result dir.
+  # Note: runspec uses 'specint'/'specfp' for the benchmark sets.
+  NCPUS=$(nproc)
   ./bin/runspec \
     --config="$TMP_CFG" \
+    --define build_ncpus="$NCPUS" \
     --action=run \
     --size=ref \
-    specint specfp \
-    --output_format=html
+    specint specfp
 
   rm -f "$TMP_CFG"
 
