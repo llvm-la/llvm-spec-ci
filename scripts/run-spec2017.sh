@@ -37,9 +37,11 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   echo "Config file: $CFG_FILE"
   echo "Run GUID:    $RUNGUID"
 
-  # Substitute LLVM install path in config
-  mkdir -p "$SPEC_DIR/config"
-  sed "s|@@BUILD_DIR@@|$BUILD_DIR|g" "$CFG_FILE" > "$SPEC_DIR/config/clang-loongarch.cfg"
+  # Substitute LLVM install path in config, write to temp location
+  # runcpu looks for --config path relative to SPEC_DIR/config/,
+  # so we must use an absolute path to the substituted file.
+  TMP_CFG=$(mktemp /tmp/spec-cfg-XXXXXX)
+  sed "s|@@BUILD_DIR@@|$BUILD_DIR|g" "$CFG_FILE" > "$TMP_CFG"
 
   cd "$SPEC_DIR"
   source shrc
@@ -48,11 +50,13 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   # Note: runcpu v6612 (SPEC 2017 v1.0.5) does not support --runguid/--run_guid
   # or --norerun. Use minimal options and let SPEC auto-name the result dir.
   ./bin/runcpu \
-    --config=config/clang-loongarch.cfg \
+    --config="$TMP_CFG" \
     --action=run \
     --size=ref \
     SPECint SPECfp \
     --output_format=html
+
+  rm -f "$TMP_CFG"
 
   # Copy results to project directory, namespaced per config
   # Result dir pattern: result/<date>-<config>-<benchmark_set>
