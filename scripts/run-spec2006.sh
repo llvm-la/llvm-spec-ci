@@ -38,6 +38,7 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   echo "Run GUID:    $RUNGUID"
 
   # Substitute LLVM install path in config
+  mkdir -p "$SPEC_DIR/config"
   sed "s|@@BUILD_DIR@@|$BUILD_DIR|g" "$CFG_FILE" > "$SPEC_DIR/config/clang-loongarch.cfg"
 
   cd "$SPEC_DIR"
