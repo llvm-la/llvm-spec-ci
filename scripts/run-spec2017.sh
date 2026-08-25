@@ -46,14 +46,14 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
   cd "$SPEC_DIR"
   source shrc
 
-  # Run full SPECint + SPECfp
-  # Note: runcpu v6612 (SPEC 2017 v1.0.5) does not support --runguid/--run_guid
-  # or --norerun. Use minimal options and let SPEC auto-name the result dir.
+  # Run full intrate + fprate
+  # Note: runcpu v6612 (SPEC 2017 v1.0.5) uses 'intrate'/'fprate' (not
+  # SPECint/SPECfp), and does not support --runguid/--run_guid or --norerun.
   ./bin/runcpu \
     --config="$TMP_CFG" \
     --action=run \
     --size=ref \
-    SPECint SPECfp \
+    intrate fprate \
     --output_format=html
 
   rm -f "$TMP_CFG"
