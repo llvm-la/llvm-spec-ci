@@ -3,9 +3,11 @@ set -euo pipefail
 
 # Build LLVM clang + flang from main branch (Release, LoongArch target)
 
-BUILD_DIR="${LLVM_BUILD_DIR:-build-llvm}"
-SRC_DIR="$(readlink -f "${LLVM_SRC_DIR:-repos/llvm-project}")"
-OUTPUT_DIR="build-info"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+BUILD_DIR="$(readlink -f "${LLVM_BUILD_DIR:-$PROJECT_DIR/build-llvm}")"
+SRC_DIR="$(readlink -f "${LLVM_SRC_DIR:-$PROJECT_DIR/repos/llvm-project}")"
+OUTPUT_DIR="$PROJECT_DIR/build-info"
 CORES=$(nproc)
 
 echo "=== LLVM Build Configuration ==="
