@@ -10,6 +10,18 @@ BUILD_DIR="$(readlink -f "${LLVM_BUILD_DIR:-$PROJECT_DIR/build-llvm}")"
 SPEC_DIR="$(readlink -f "$PROJECT_DIR/repos/cpu2006")"
 CFG_DIR="$PROJECT_DIR/cfg"
 
+# Some benchmarks crash with memory overflow unless stack and core
+# limits are unlimited; must be set before invoking runspec.
+if ! ulimit -s unlimited; then
+  echo "[ERROR] Failed to set 'ulimit -s unlimited' (soft: $(ulimit -s), hard: $(ulimit -Hs))"
+  exit 1
+fi
+if ! ulimit -c unlimited; then
+  echo "[ERROR] Failed to set 'ulimit -c unlimited' (soft: $(ulimit -c), hard: $(ulimit -Hc))"
+  exit 1
+fi
+echo "[INFO] Limits set: stack=$(ulimit -s), core=$(ulimit -c)"
+
 echo "=== SPEC CPU 2006 Run Configuration ==="
 echo "SPEC Dir:    $SPEC_DIR"
 echo "Build Dir:   $BUILD_DIR"
