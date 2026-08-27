@@ -50,7 +50,7 @@ cmake -G Ninja "$SRC_DIR/llvm" \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_OPTIMIZED_TABLEGEN=ON \
   -DLLVM_PARALLEL_LINK_JOBS=2 \
-  -DLLVM_ENABLE_SHARED_LIBS=true
+  -DBUILD_SHARED_LIBS=true
 
 echo "[INFO] CMake configuration complete"
 
