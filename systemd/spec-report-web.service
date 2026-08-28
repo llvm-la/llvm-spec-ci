@@ -1,0 +1,14 @@
+[Unit]
+Description=SPEC CPU benchmark report web server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/user/code/llvm-spec-ci
+ExecStartPre=/usr/bin/mkdir -p results/latest
+ExecStart=/usr/local/bin/python3 -m http.server 8080 --bind 0.0.0.0 --directory results/latest
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
