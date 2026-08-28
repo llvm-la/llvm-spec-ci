@@ -170,6 +170,13 @@ if [ -n "$SPEC2006_DIR" ] && [ -d "$SPEC2006_DIR" ]; then
   cp -r "$SPEC2006_DIR" "$OUTPUT_DIR/spec2006-detail/$CFG_NAME/" 2>/dev/null || true
 fi
 
+# Copy the static comparison page into the publish dir so it sits next to
+# history.json (fixes the relative fetch('history.json') path mismatch).
+COMPARE_SRC="$PROJECT_DIR/results/compare.html"
+if [ -f "$COMPARE_SRC" ]; then
+  cp "$COMPARE_SRC" "$OUTPUT_DIR/compare.html"
+fi
+
 # Append scores to history.json for online comparison
 HISTORY_FILE="$OUTPUT_DIR/history.json"
 TODAY=$(date +%Y-%m-%d)
