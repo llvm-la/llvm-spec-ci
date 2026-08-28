@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Automated SPEC CPU 2017 & 2006 benchmark CI on a self-hosted LoongArch (龙芯) GitHub Actions runner. Every 15 days, it builds clang/flang from LLVM main, runs the full SPEC suite, and publishes score reports as artifacts and GitHub Pages.
+Automated SPEC CPU 2017 & 2006 benchmark CI on a self-hosted LoongArch (龙芯) machine, orchestrated locally by `scripts/ci.sh` (no GitHub Actions). Every 15 days (local cron), it builds clang/flang from LLVM main, runs the full SPEC suite, and publishes score reports served by a local web server.
 
 ## Repository Structure
 
@@ -52,18 +52,55 @@ repos/
 - Appends scores to `results/latest/history.json` for online comparison (handles missing benchmarks as null).
 
 ### Online Comparison (`results/compare.html`)
-- Static HTML page hosted on GitHub Pages for comparing scores across runs.
+- Static HTML page served by the local web server (see Local CI) for comparing scores across runs.
 - Loads `history.json` via fetch, populates two dropdown selectors.
 - Displays side-by-side comparison table with absolute diff and percentage change.
 - Missing benchmarks (null scores) show N/A and are excluded from diff calculation.
 - Pure client-side JavaScript, no build step or dependencies.
 
-### Workflow (`.github/workflows/spec-benchmark.yml`)
-- Chain: `setup-env` → `build-llvm` → `run-spec2017` → `run-spec2006` → `generate-report` (fully serial to avoid benchmark interference).
-- Timeouts: 10m (env check), 480m (LLVM build), 1440m per SPEC run, 30m (report).
-- `generate-report` uses `if: always()` to run even if SPEC jobs fail (partial results).
-- Artifacts retained 90 days. Deployed to GitHub Pages on `main` branch.
-- Trigger: cron `0 0 1,16 * *` + `workflow_dispatch`.
+## Local CI (`scripts/ci.sh`)
+
+Orchestration runs on the runner itself (no GitHub Actions). `scripts/ci.sh` is the
+single entry point; it runs the existing step scripts under a global `flock` so two
+runs (each using all cores) never overlap.
+
+```bash
+./scripts/ci.sh <command> [--config NAME]
+```
+
+Commands:
+- `full` — setup-env → build → spec2017 → spec2006 → report
+- `build` / `spec2017` / `spec2006` / `report` — run a single step
+- `status` — show whether a run is in progress (read-only)
+- `list-configs` — list available `cfg/*.cfg` (read-only)
+- `help`
+
+`--config NAME` runs only configs whose name contains NAME (substring match).
+
+Behavior:
+- A global lock (`.ci.lock`) is held for the duration of any run command; a second
+  concurrent invocation is refused (exit 1), not queued or cancelled.
+- `full` aborts if `setup-env` or `build` fails; a `spec2017`/`spec2006` failure is
+  recorded but the remaining steps and `report` still run (partial results); the exit
+  code reflects any step failure.
+- Each run tees its output to `logs/<timestamp>-<command>/run.log`.
+- `ci.sh` prepends `/usr/local/bin` to PATH (cron's default PATH lacks the build tools).
+
+Scheduling (cron, replaces the old GitHub cron; edit the schedule as needed):
+```
+0 0 1,16 * * cd /home/user/code/llvm-spec-ci && mkdir -p logs && ./scripts/ci.sh full >> logs/cron.log 2>&1
+```
+Install via `crontab -e`. If a manual run is in progress when cron fires, the lock
+makes cron skip safely.
+
+Report web server (systemd; change the port in the unit if needed):
+```
+sudo cp systemd/spec-report-web.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now spec-report-web
+```
+Serves `results/latest/` at `http://<host>:8080/` (`index.html`, `compare.html`,
+`history.json`, detail reports).
 
 ## Environment Variables
 
@@ -72,6 +109,7 @@ repos/
 | `LLVM_BUILD_DIR` | `build-llvm` | LLVM build output directory (under project root) |
 | `LLVM_SRC_DIR` | `repos/llvm-project` | LLVM source directory (updated via git pull, not checkout) |
 | `SPEC_RUNGUID` | auto-generated | SPEC run GUID prefix |
+| `CFG_FILTER` | (unset) | Run only configs whose name contains this substring (set by `ci.sh --config`) |
 
 ## Common Commands
 
@@ -79,14 +117,17 @@ repos/
 # Check runner environment
 ./scripts/setup-env.sh
 
-# Build LLVM locally
-./scripts/build-llvm.sh
+# Full local CI run (build + both SPEC suites + report)
+./scripts/ci.sh full
 
-# Run SPEC 2017 suite (all matching configs)
-./scripts/run-spec2017.sh
+# Single steps
+./scripts/ci.sh build
+./scripts/ci.sh spec2017 --config clang
+./scripts/ci.sh report
 
-# Generate report from existing results
-./scripts/generate-report.sh
+# Inspect state / available configs
+./scripts/ci.sh status
+./scripts/ci.sh list-configs
 ```
 
 ## Constraints
