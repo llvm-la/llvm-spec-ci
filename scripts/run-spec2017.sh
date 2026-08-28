@@ -9,6 +9,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$(readlink -f "${LLVM_BUILD_DIR:-$PROJECT_DIR/build-llvm}")"
 SPEC_DIR="$(readlink -f "$PROJECT_DIR/repos/cpu2017")"
 CFG_DIR="$PROJECT_DIR/cfg"
+CFG_FILTER="${CFG_FILTER:-}"
 
 # Some benchmarks crash with memory overflow unless stack and core
 # limits are unlimited; must be set before invoking runcpu.
@@ -31,6 +32,16 @@ echo "Config dir:  $CFG_DIR"
 shopt -s nullglob
 CFG_FILES=( "$CFG_DIR"/*2017*.cfg )
 shopt -u nullglob
+
+# Optional substring filter on config names (set via CFG_FILTER by ci.sh).
+if [ -n "$CFG_FILTER" ] && [ ${#CFG_FILES[@]} -gt 0 ]; then
+  FILTERED=()
+  for f in "${CFG_FILES[@]}"; do
+    base=$(basename "$f" .cfg)
+    if [[ "$base" == *"$CFG_FILTER"* ]]; then FILTERED+=( "$f" ); fi
+  done
+  CFG_FILES=( ${FILTERED[@]+"${FILTERED[@]}"} )   # safe under set -u when empty
+fi
 
 if [ ${#CFG_FILES[@]} -eq 0 ]; then
   echo "[ERROR] No config files matching $CFG_DIR/*2017*.cfg found"
