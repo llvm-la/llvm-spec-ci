@@ -17,3 +17,8 @@ build-llvm/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local CI
+logs/
+.ci.lock
+.ci.lock.info
