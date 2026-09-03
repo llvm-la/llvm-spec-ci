@@ -1,0 +1,207 @@
+# spec-ci.yaml template.
+# Used by `spec-ci init` to scaffold a new spec-ci.yaml.
+# Per-benchmark portability flags required for compilation are pre-filled here
+# so the generated cfg can build each benchmark out-of-the-box.
+# Users may freely edit the generated spec-ci.yaml afterwards.
+#
+version: 1
+name: example
+cpu2006:
+  compiler:
+    default:
+      COPTIMIZE: -O3
+      CXXOPTIMIZE: -O3
+      FOPTIMIZE: -O3
+  benchmarks:
+    400.perlbench:
+      enabled: false
+      CPORTABILITY: -DSPEC_CPU_LINUX -std=gnu89
+    401.bzip2:
+      enabled: false
+      CPORTABILITY: -Wno-int-conversion
+    403.gcc:
+      enabled: false
+      CPORTABILITY: -Wno-incompatible-pointer-types
+    429.mcf:
+      enabled: false
+    445.gobmk:
+      enabled: false
+      CPORTABILITY: -fwrapv-pointer
+    456.hmmer:
+      enabled: false
+      CPORTABILITY: -Wno-implicit-function-declaration
+    458.sjeng:
+      enabled: false
+    462.libquantum:
+      enabled: false
+      CPORTABILITY: -DSPEC_CPU_LINUX
+    464.h264ref:
+      enabled: false
+    471.omnetpp:
+      enabled: false
+    473.astar:
+      enabled: false
+      CXXPORTABILITY: -std=c++98
+    483.xalancbmk:
+      enabled: false
+      CXXPORTABILITY: -DSPEC_CPU_LINUX -std=gnu++98 -fdelayed-template-parsing
+    410.bwaves:
+      enabled: false
+    416.gamess:
+      enabled: false
+      FPORTABILITY: -std=f2018
+    433.milc:
+      enabled: false
+    434.zeusmp:
+      enabled: false
+    435.gromacs:
+      enabled: false
+    436.cactusADM:
+      enabled: false
+    437.leslie3d:
+      enabled: false
+    444.namd:
+      enabled: false
+      CXXPORTABILITY: -Wno-register
+    447.dealII:
+      enabled: false
+      CXXPORTABILITY: -DSPEC_CPU_LINUX  -include cstddef -fpermissive -std=gnu++98
+    450.soplex:
+      enabled: false
+      CXXPORTABILITY: -std=c++03
+    453.povray:
+      enabled: false
+      CXXPORTABILITY: -Wno-register
+    454.calculix:
+      enabled: false
+      CPORTABILITY: -Wno-int-conversion
+    459.GemsFDTD:
+      enabled: false
+    465.tonto:
+      enabled: false
+    470.lbm:
+      enabled: false
+    481.wrf:
+      enabled: false
+      CPORTABILITY: -DSPEC_CPU_CASE_FLAG -DSPEC_CPU_LINUX -Wno-implicit-int -Wno-implicit-function-declaration
+      FPORTABILITY: -fno-stack-arrays
+    482.sphinx3:
+      enabled: false
+  run:
+    size: ref
+    iterations: 3
+cpu2017:
+  compiler:
+    default:
+      COPTIMIZE: -O3
+      CXXOPTIMIZE: -O3
+      FOPTIMIZE: -O3
+  benchmarks:
+    500.perlbench_r:
+      enabled: false
+      PORTABILITY: -DSPEC_LINUX_X64 -fno-finite-math-only -fno-unsafe-math-optimizations
+    502.gcc_r:
+      enabled: false
+    505.mcf_r:
+      enabled: false
+    520.omnetpp_r:
+      enabled: false
+    523.xalancbmk_r:
+      enabled: false
+      PORTABILITY: -DSPEC_LINUX -fdelayed-template-parsing
+    525.x264_r:
+      enabled: false
+      PORTABILITY: -fcommon
+    531.deepsjeng_r:
+      enabled: false
+    541.leela_r:
+      enabled: false
+    548.exchange2_r:
+      enabled: false
+    557.xz_r:
+      enabled: false
+    600.perlbench_s:
+      enabled: false
+      PORTABILITY: -DSPEC_LINUX_X64 -fno-finite-math-only -fno-unsafe-math-optimizations
+    602.gcc_s:
+      enabled: false
+    605.mcf_s:
+      enabled: false
+    620.omnetpp_s:
+      enabled: false
+    623.xalancbmk_s:
+      enabled: false
+      PORTABILITY: -DSPEC_LINUX -fdelayed-template-parsing
+    625.x264_s:
+      enabled: false
+      PORTABILITY: -fcommon
+    631.deepsjeng_s:
+      enabled: false
+    641.leela_s:
+      enabled: false
+    648.exchange2_s:
+      enabled: false
+    657.xz_s:
+      enabled: false
+    503.bwaves_r:
+      enabled: false
+    507.cactuBSSN_r:
+      enabled: false
+    508.namd_r:
+      enabled: false
+    510.parest_r:
+      enabled: false
+    511.povray_r:
+      enabled: false
+      PORTABILITY: -fno-strict-aliasing  -fno-finite-math-only
+    519.lbm_r:
+      enabled: false
+    521.wrf_r:
+      enabled: false
+      CPORTABILITY: -DSPEC_CASE_FLAG
+      FPORTABILITY: -fconvert=big-endian
+    526.blender_r:
+      enabled: false
+      PORTABILITY: -funsigned-char -DSPEC_LINUX -Wno-stringop-overread
+    527.cam4_r:
+      enabled: false
+      PORTABILITY: -DSPEC_CASE_FLAG
+      CPORTABILITY: -Wno-implicit-int
+    538.imagick_r:
+      enabled: false
+    544.nab_r:
+      enabled: false
+    549.fotonik3d_r:
+      enabled: false
+      CPORTABILITY: -fno-unsafe-math-optimizations -fcommon
+    554.roms_r:
+      enabled: false
+    603.bwaves_s:
+      enabled: false
+    607.cactuBSSN_s:
+      enabled: false
+    619.lbm_s:
+      enabled: false
+    621.wrf_s:
+      enabled: false
+      CPORTABILITY: -DSPEC_CASE_FLAG
+      FPORTABILITY: -fconvert=big-endian
+    627.cam4_s:
+      enabled: false
+      PORTABILITY: -DSPEC_CASE_FLAG
+      CPORTABILITY: -Wno-implicit-int
+    638.imagick_s:
+      enabled: false
+    644.nab_s:
+      enabled: false
+    649.fotonik3d_s:
+      enabled: false
+    654.roms_s:
+      enabled: false
+    628.pop2_s:
+      enabled: false
+      CPORTABILITY: -DSPEC_CASE_FLAG
+      FPORTABILITY: -fconvert=big-endian
+  run:
+    size: ref
+    iterations: 3

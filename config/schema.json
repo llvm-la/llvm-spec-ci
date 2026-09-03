@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "required": ["version", "name"],
+  "properties": {
+    "version": { "type": "integer" },
+    "name": { "type": "string" },
+    "cpu2006": { "$ref": "#/$defs/spec" },
+    "cpu2017": { "$ref": "#/$defs/spec" }
+  },
+  "$defs": {
+    "spec": {
+      "type": "object",
+      "required": ["compiler", "benchmarks"],
+      "properties": {
+        "compiler": {
+          "type": "object",
+          "required": ["default"],
+          "properties": {
+            "default": {
+              "type": "object",
+              "properties": {
+                "COPTIMIZE": { "type": "string" },
+                "CXXOPTIMIZE": { "type": "string" },
+                "FOPTIMIZE": { "type": "string" },
+                "OPTIMIZE": { "type": "string" }
+              }
+            }
+          }
+        },
+        "benchmarks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" }
+            }
+          }
+        },
+        "run": {
+          "type": "object",
+          "properties": {
+            "size": { "enum": ["test", "train", "ref"] },
+            "iterations": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

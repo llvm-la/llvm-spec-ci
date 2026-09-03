@@ -1,0 +1,201 @@
+version: 1
+name: mytest
+cpu2006:
+  compiler:
+    default:
+      COPTIMIZE: -O3
+      CXXOPTIMIZE: -O3
+      FOPTIMIZE: -O3
+  benchmarks:
+    400.perlbench:
+      enabled: true
+      CPORTABILITY: -DSPEC_CPU_LINUX -std=gnu89
+    401.bzip2:
+      enabled: true
+      CPORTABILITY: -Wno-int-conversion
+    403.gcc:
+      enabled: true
+      CPORTABILITY: -Wno-incompatible-pointer-types
+    429.mcf:
+      enabled: true
+    445.gobmk:
+      enabled: true
+      CPORTABILITY: -fwrapv-pointer
+    456.hmmer:
+      enabled: true
+      CPORTABILITY: -Wno-implicit-function-declaration
+    458.sjeng:
+      enabled: true
+    462.libquantum:
+      enabled: true
+      CPORTABILITY: -DSPEC_CPU_LINUX
+    464.h264ref:
+      enabled: true
+    471.omnetpp:
+      enabled: true
+    473.astar:
+      enabled: true
+      CXXPORTABILITY: -std=c++98
+    483.xalancbmk:
+      enabled: true
+      CXXPORTABILITY: -DSPEC_CPU_LINUX -std=gnu++98 -fdelayed-template-parsing
+    410.bwaves:
+      enabled: false
+    416.gamess:
+      enabled: false
+      FPORTABILITY: -std=f2018
+    433.milc:
+      enabled: false
+    434.zeusmp:
+      enabled: false
+    435.gromacs:
+      enabled: false
+    436.cactusADM:
+      enabled: false
+    437.leslie3d:
+      enabled: false
+    444.namd:
+      enabled: false
+      CXXPORTABILITY: -Wno-register
+    447.dealII:
+      enabled: false
+      CXXPORTABILITY: -DSPEC_CPU_LINUX  -include cstddef -fpermissive -std=gnu++98
+    450.soplex:
+      enabled: false
+      CXXPORTABILITY: -std=c++03
+    453.povray:
+      enabled: false
+      CXXPORTABILITY: -Wno-register
+    454.calculix:
+      enabled: false
+      CPORTABILITY: -Wno-int-conversion
+    459.GemsFDTD:
+      enabled: false
+    465.tonto:
+      enabled: false
+    470.lbm:
+      enabled: false
+    481.wrf:
+      enabled: false
+      CPORTABILITY: -DSPEC_CPU_CASE_FLAG -DSPEC_CPU_LINUX -Wno-implicit-int -Wno-implicit-function-declaration
+      FPORTABILITY: -fno-stack-arrays
+    482.sphinx3:
+      enabled: false
+  run:
+    size: ref
+    iterations: 3
+cpu2017:
+  compiler:
+    default:
+      COPTIMIZE: -O3
+      CXXOPTIMIZE: -O3
+      FOPTIMIZE: -O3
+  benchmarks:
+    500.perlbench_r:
+      enabled: false
+      PORTABILITY: -DSPEC_LINUX_X64 -fno-finite-math-only -fno-unsafe-math-optimizations
+    502.gcc_r:
+      enabled: false
+    505.mcf_r:
+      enabled: false
+    520.omnetpp_r:
+      enabled: false
+    523.xalancbmk_r:
+      enabled: false
+      PORTABILITY: -DSPEC_LINUX -fdelayed-template-parsing
+    525.x264_r:
+      enabled: false
+      PORTABILITY: -fcommon
+    531.deepsjeng_r:
+      enabled: false
+    541.leela_r:
+      enabled: false
+    548.exchange2_r:
+      enabled: false
+    557.xz_r:
+      enabled: false
+    600.perlbench_s:
+      enabled: true
+      PORTABILITY: -DSPEC_LINUX_X64 -fno-finite-math-only -fno-unsafe-math-optimizations
+    602.gcc_s:
+      enabled: true
+    605.mcf_s:
+      enabled: true
+    620.omnetpp_s:
+      enabled: true
+    623.xalancbmk_s:
+      enabled: true
+      PORTABILITY: -DSPEC_LINUX -fdelayed-template-parsing
+    625.x264_s:
+      enabled: true
+      PORTABILITY: -fcommon
+    631.deepsjeng_s:
+      enabled: true
+    641.leela_s:
+      enabled: true
+    648.exchange2_s:
+      enabled: true
+    657.xz_s:
+      enabled: true
+    503.bwaves_r:
+      enabled: true
+    507.cactuBSSN_r:
+      enabled: true
+    508.namd_r:
+      enabled: true
+    510.parest_r:
+      enabled: true
+    511.povray_r:
+      enabled: true
+      PORTABILITY: -fno-strict-aliasing  -fno-finite-math-only
+    519.lbm_r:
+      enabled: true
+    521.wrf_r:
+      enabled: true
+      CPORTABILITY: -DSPEC_CASE_FLAG
+      FPORTABILITY: -fconvert=big-endian
+    526.blender_r:
+      enabled: true
+      PORTABILITY: -funsigned-char -DSPEC_LINUX -Wno-stringop-overread
+    527.cam4_r:
+      enabled: true
+      PORTABILITY: -DSPEC_CASE_FLAG
+      CPORTABILITY: -Wno-implicit-int
+    538.imagick_r:
+      enabled: true
+    544.nab_r:
+      enabled: true
+    549.fotonik3d_r:
+      enabled: true
+      CPORTABILITY: -fno-unsafe-math-optimizations -fcommon
+    554.roms_r:
+      enabled: true
+    603.bwaves_s:
+      enabled: false
+    607.cactuBSSN_s:
+      enabled: false
+    619.lbm_s:
+      enabled: false
+    621.wrf_s:
+      enabled: false
+      CPORTABILITY: -DSPEC_CASE_FLAG
+      FPORTABILITY: -fconvert=big-endian
+    627.cam4_s:
+      enabled: false
+      PORTABILITY: -DSPEC_CASE_FLAG
+      CPORTABILITY: -Wno-implicit-int
+    638.imagick_s:
+      enabled: false
+    644.nab_s:
+      enabled: false
+    649.fotonik3d_s:
+      enabled: false
+    654.roms_s:
+      enabled: false
+    628.pop2_s:
+      enabled: false
+      CPORTABILITY: -DSPEC_CASE_FLAG
+      FPORTABILITY: -fconvert=big-endian
+  run:
+    size: ref
+    iterations: 3
