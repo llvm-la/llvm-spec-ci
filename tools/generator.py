@@ -106,7 +106,7 @@ def main():
     if block is None:
         raise SystemExit(f"error: spec '{a.spec}' not present in {a.yaml}")
 
-    template = TEMPLATE_DIR / a.spec / "llvm.cfg.template"
+    template = TEMPLATE_DIR / f"{a.spec}.cfg"
     cfg = generate(a.spec, block, a.llvm_dir, template.read_text())
 
     if a.output == "-":
