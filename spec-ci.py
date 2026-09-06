@@ -132,6 +132,7 @@ def init(args):
     d = {
         "version": 1,
         "name": args.name,
+        "author": args.author,
     }
     for s in args.specs:
         d[s] = _spec_block_from_template(tpl, s)
@@ -345,6 +346,8 @@ def main():
     x = s.add_parser("init", help="create a new spec-ci.yaml")
     x.add_argument("--file", default=DEFAULT_FILE)
     x.add_argument("--name", default="example")
+    x.add_argument("--author", default="anonymous",
+                   help="author name (default: anonymous)")
     x.add_argument("--specs", nargs="+", default=SPECS, choices=SPECS,
                    help=f"which SPEC suites to scaffold (default: all: {', '.join(SPECS)})")
     x.set_defaults(func=init)
