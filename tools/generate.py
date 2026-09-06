@@ -111,14 +111,14 @@ def _enabled_benchmarks(yaml_block):
     return out
 
 
-def generate_run_script(spec, yaml_block, cfg_path, output_root):
+def generate_run_script(spec, yaml_block, cfg_path, expid):
     """Return the run-cpu20NN.sh text for one spec suite.
 
     The script:
       - raises ulimit -s/-c unlimited
       - cds into the SPEC installation and sources shrc
       - runs runspec/runcpu with the generated cfg, size, enabled
-        benchmarks, iterations and --output_root
+        benchmarks, iterations and --expid
     """
     dir_ = os.environ.get(f"SPEC_{spec.upper()}_DIR", "")
     size = yaml_block.get("run", {}).get("size", "ref")
@@ -136,7 +136,7 @@ def generate_run_script(spec, yaml_block, cfg_path, output_root):
         f"source shrc\n"
         f"\n"
         f"{cmd} -c {cfg_path} -i {size} {bench_args} -n {iterations}"
-        f" --output_root={output_root}\n"
+        f" --expid={expid}\n"
     )
 
 
@@ -151,7 +151,7 @@ def main():
     p.add_argument("--out", "--output", default=None, dest="out",
                    help="output directory for the generated .cfg/.sh files")
     p.add_argument("--output-root", default=None,
-                   help="SPEC output_root (default: $SPEC_BUILD_DIR or $SPEC_RESULT_DIR)")
+                   help="SPEC expid (default: $SPEC_BUILD_DIR or $SPEC_RESULT_DIR)")
     a = p.parse_args()
 
     if a.out is None:
@@ -162,16 +162,16 @@ def main():
     if not a.llvm_dir:
         raise SystemExit("error: --llvm-dir required (or set LLVM_BUILD_DIR in .env)")
 
-    if a.output_root is None:
-        a.output_root = os.environ.get("SPEC_BUILD_DIR",
+    if a.expid is None:
+        a.expid = os.environ.get("SPEC_BUILD_DIR",
                                        os.environ.get("SPEC_RESULT_DIR", ""))
-    if not a.output_root:
+    if not a.expid:
         raise SystemExit(
             "error: --output-root required (or set SPEC_BUILD_DIR / SPEC_RESULT_DIR in .env)")
 
     # Resolve to absolute paths so the generated cfg/sh work regardless of $PWD.
     a.llvm_dir = str(Path(a.llvm_dir).resolve())
-    a.output_root = str(Path(a.output_root).resolve())
+    a.expid = str(Path(a.expid).resolve())
 
     out_dir = Path(a.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -202,7 +202,7 @@ def main():
         cfg_dest.write_text(cfg)
         print(f"generated {cfg_dest}")
 
-        script = generate_run_script(spec, block, str(cfg_dest), a.output_root)
+        script = generate_run_script(spec, block, str(cfg_dest), a.expid)
         sh_dest = out_dir / f"run-{spec}.sh"
         sh_dest.write_text(script)
         sh_dest.chmod(sh_dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
