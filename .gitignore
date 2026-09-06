@@ -1,4 +1,6 @@
 build-llvm/
+build-spec/
+spec-results/
 repos/
 .env
 __pycache__/

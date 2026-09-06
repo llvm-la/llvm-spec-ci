@@ -4,7 +4,7 @@
 Manage the spec-ci.yaml file that drives the LLVM performance CI pipeline.
 Users author one YAML that may describe both SPEC CPU2006 and CPU2017 runs.
 This CLI validates and initializes the config; it does NOT generate SPEC .cfg
-files (that is generator.py on the Jenkins side).
+files (that is generate.py on the Jenkins side).
 """
 import argparse
 import os
@@ -15,26 +15,22 @@ import yaml
 from dotenv import load_dotenv
 
 load_dotenv()
-# .env values may reference other vars ($CI_ROOT/...); expand them like the
-# shell scripts do when sourcing .env.
-for _k, _v in os.environ.items():
-    if _v and "$" in _v:
-        os.environ[_k] = os.path.expandvars(_v)
 DEFAULT_FILE = os.environ.get("SPEC_CI_FILE", "spec-ci.yaml")
 
 SPECS = ("cpu2006", "cpu2017")
 
 # Variables allowed in spec-ci.yaml.  CC/CXX/FC are not stored in YAML;
-# generator.py derives them from the LLVM build directory.
+# generate.py derives them from the LLVM build directory.
 # - OPTIMIZE_* : global optimization flags (compiler.default level)
 # - PORTABILITY_* : per-benchmark portability flags (benchmark level)
 ALLOWED_CFG_VARS = {
     "COPTIMIZE", "CXXOPTIMIZE", "FOPTIMIZE", "OPTIMIZE",
     "PORTABILITY", "CPORTABILITY", "CXXPORTABILITY", "FPORTABILITY",
+    "EXTRA_CXXFLAGS", "EXTRA_CFLAGS", "EXTRA_FFLAGS",
 }
 
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
-TEMPLATE_FILE = TEMPLATE_DIR / "spec-ci.template.yaml"
+ROOT = Path(__file__).resolve().parent
+TEMPLATE_FILE = ROOT / "templates" / "spec-ci.template.yaml"
 
 # SPEC CPU2006 benchmarks, split into its two groups (CINT2006/CFP2006).
 CPU2006_BENCHMARKS = {
@@ -153,12 +149,14 @@ def _schema_checks(d):
         problems.append("missing required key: version")
     if "name" not in d:
         problems.append("missing required key: name")
+    if "author" not in d:
+        problems.append("missing required key: author")
 
     for spec, block in d.items():
-        if spec in ("version", "name"):
+        if spec in ("version", "name", "author"):
             continue
         if spec not in SPECS:
-            problems.append(f"unknown key '{spec}'; expected one of version/name/{', '.join(SPECS)}")
+            problems.append(f"unknown key '{spec}'; expected one of version/name/author/{', '.join(SPECS)}")
             continue
         if not isinstance(block, dict):
             problems.append(f"spec '{spec}': expected a mapping")

@@ -64,6 +64,7 @@ cmake \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_INSTALL_PREFIX="$LLVM_BUILD_DIR" \
     -DLLVM_USE_LINKER=lld \
     -DLLVM_TARGETS_TO_BUILD=LoongArch \
     -DLLVM_ENABLE_PROJECTS="clang;flang" \
@@ -73,6 +74,10 @@ cmake \
 echo
 echo "===== BUILD LLVM ====="
 cmake --build "$LLVM_BUILD_DIR" --parallel "$BUILD_JOBS"
+
+echo
+echo "===== INSTALL LLVM ====="
+cmake --install "$LLVM_BUILD_DIR"
 
 echo
 echo "===== VERIFY LLVM ====="

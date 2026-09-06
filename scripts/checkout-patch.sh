@@ -2,7 +2,7 @@
 # Check out a Gerrit patchset on top of the base commit in the LLVM source tree.
 # Usage: checkout-patch.sh <change> <patchset>
 #
-# Paths (LLVM_SOURCE_DIR, BASE_FILE, ...) come from the repo-root .env.
+# Paths (LLVM_SOURCE_DIR, BASE_COMMIT, ...) come from the repo-root .env.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,12 +24,7 @@ if [[ ! -d "$LLVM_SOURCE_DIR/.git" ]]; then
     echo "ERROR: llvm-project not found at $LLVM_SOURCE_DIR"
     exit 1
 fi
-if [[ ! -f "$BASE_FILE" ]]; then
-    echo "ERROR: Base Commit file not found: $BASE_FILE"
-    exit 1
-fi
-
-BASE_COMMIT=$(cat "$BASE_FILE")
+BASE_COMMIT="${BASE_COMMIT:?BASE_COMMIT not set in .env}"
 
 echo "======================================"
 echo "Base Commit: $BASE_COMMIT"

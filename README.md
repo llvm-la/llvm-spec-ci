@@ -7,13 +7,17 @@ Flow:
 ```
 Gerrit Patch
  -> Save spec-ci.yaml
- -> Validate spec-ci.yaml (tools/spec-ci.py validate)
+ -> Validate spec-ci.yaml (spec-ci.py validate)
+ -> Validate Parameters (GERRIT_CHANGE, GERRIT_PATCHSET)
+ -> Cleanup (rm $SPEC_BUILD_DIR; keep $LLVM_BUILD_DIR, $SPEC_RESULT_DIR, workspace)
+ -> Verify Upload (spec-ci.yaml exists)
  -> Checkout Gerrit patch
  -> Build LLVM (exports LLVM_DIR)
- -> Generate SPEC cfg (scripts/generate-spec-cfg.sh, per suite present in YAML)
- -> Build SPEC (scripts/build-spec.sh)
- -> Run SPEC (scripts/run-spec.sh, runspec from YAML enabled/size/iterations)
- -> Collect result (tools/collect-result.py) -> result.json
+ -> Generate SPEC cfg + run scripts (tools/generate.py, per suite present in YAML)
+ -> Run SPEC (generated run-cpu2006.sh / run-cpu2017.sh: source shrc, ulimit, runspec/runcpu)
+ -> Collect result (tools/collect-result.py) -> $SPEC_RESULT_DIR/result-{name}-{author}-{change}-{patchset}-{build}.json
+ -> Package results (scripts/package-build.sh + archiveArtifacts) -> spec-build-<timestamp>.tar.gz (Jenkins artifact)
+ -> Cleanup Workspace (rm spec-ci.yaml, tarball; keep $SPEC_RESULT_DIR for comparison)
 ```
 
 The SPEC configuration is generated from a single human-readable YAML file
@@ -21,8 +25,9 @@ The SPEC configuration is generated from a single human-readable YAML file
 changes per run: optimization flags (`COPTIMIZE`/`CXXOPTIMIZE`/`FOPTIMIZE`),
 which benchmarks are enabled, and run parameters (`size`, `iterations`).
 Compiler paths, hardware descriptions, and per-benchmark portability rules
-live in the templates (`templates/cpu2006|cpu2017/llvm.cfg.template`) and are
-filled in by `tools/generator.py`.
+live in the templates (`templates/cfg/cpu2006.cfg`, `templates/cfg/cpu2017.cfg`) and are
+filled in by `tools/generate.py`, which also emits `run-cpu2006.sh` /
+`run-cpu2017.sh` to invoke runspec/runcpu with the generated cfg.
 
 ## spec-ci.yaml layout
 
@@ -47,10 +52,10 @@ cpu2017:            # present => cpu2017.cfg generated
 ## CLI
 
 ```sh
-python3 tools/spec-ci.py init --specs cpu2006 cpu2017   # scaffold a YAML
-python3 tools/spec-ci.py validate spec-ci.yaml          # validate
+python3 spec-ci.py init --specs cpu2006 cpu2017   # scaffold a YAML
+python3 spec-ci.py validate spec-ci.yaml          # validate
 ```
 
 Path configuration (`LLVM_BUILD_DIR`, `SPEC_CI_FILE`, ...) is read from the
-repo-root `.env` by the `tools/*.py` scripts via `python-dotenv`. Copy
+repo-root `.env` by the Python scripts via `python-dotenv`. Copy
 `.env.example` to `.env` and adjust for the machine.

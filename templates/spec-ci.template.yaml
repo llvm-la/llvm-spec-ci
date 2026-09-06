@@ -1,5 +1,12 @@
+# spec-ci.yaml template.
+# Used by `spec-ci init` to scaffold a new spec-ci.yaml.
+# Per-benchmark portability flags required for compilation are pre-filled here
+# so the generated cfg can build each benchmark out-of-the-box.
+# Users may freely edit the generated spec-ci.yaml afterwards.
+#
 version: 1
-name: mytest
+name: example
+author: anonymous
 cpu2006:
   compiler:
     default:
@@ -8,36 +15,36 @@ cpu2006:
       FOPTIMIZE: -O3
   benchmarks:
     400.perlbench:
-      enabled: true
+      enabled: false
       CPORTABILITY: -DSPEC_CPU_LINUX -std=gnu89
     401.bzip2:
-      enabled: true
+      enabled: false
       CPORTABILITY: -Wno-int-conversion
     403.gcc:
-      enabled: true
+      enabled: false
       CPORTABILITY: -Wno-incompatible-pointer-types
     429.mcf:
-      enabled: true
+      enabled: false
     445.gobmk:
-      enabled: true
+      enabled: false
       CPORTABILITY: -fwrapv-pointer
     456.hmmer:
-      enabled: true
+      enabled: false
       CPORTABILITY: -Wno-implicit-function-declaration
     458.sjeng:
-      enabled: true
+      enabled: false
     462.libquantum:
-      enabled: true
+      enabled: false
       CPORTABILITY: -DSPEC_CPU_LINUX
     464.h264ref:
-      enabled: true
+      enabled: false
     471.omnetpp:
-      enabled: true
+      enabled: false
     473.astar:
-      enabled: true
+      enabled: false
       CXXPORTABILITY: -std=c++98
     483.xalancbmk:
-      enabled: true
+      enabled: false
       CXXPORTABILITY: -DSPEC_CPU_LINUX -std=gnu++98 -fdelayed-template-parsing
     410.bwaves:
       enabled: false
@@ -83,7 +90,7 @@ cpu2006:
       enabled: false
   run:
     size: ref
-    iterations: 3
+    iterations: 1
 cpu2017:
   compiler:
     default:
@@ -115,61 +122,62 @@ cpu2017:
     557.xz_r:
       enabled: false
     600.perlbench_s:
-      enabled: true
+      enabled: false
       PORTABILITY: -DSPEC_LINUX_X64 -fno-finite-math-only -fno-unsafe-math-optimizations
     602.gcc_s:
-      enabled: true
+      enabled: false
     605.mcf_s:
-      enabled: true
+      enabled: false
     620.omnetpp_s:
-      enabled: true
+      enabled: false
     623.xalancbmk_s:
-      enabled: true
+      enabled: false
       PORTABILITY: -DSPEC_LINUX -fdelayed-template-parsing
     625.x264_s:
-      enabled: true
+      enabled: false
       PORTABILITY: -fcommon
     631.deepsjeng_s:
-      enabled: true
+      enabled: false
     641.leela_s:
-      enabled: true
+      enabled: false
     648.exchange2_s:
-      enabled: true
+      enabled: false
     657.xz_s:
-      enabled: true
+      enabled: false
     503.bwaves_r:
-      enabled: true
+      enabled: false
     507.cactuBSSN_r:
-      enabled: true
+      enabled: false
     508.namd_r:
-      enabled: true
+      enabled: false
     510.parest_r:
-      enabled: true
+      enabled: false
     511.povray_r:
-      enabled: true
+      enabled: false
       PORTABILITY: -fno-strict-aliasing  -fno-finite-math-only
     519.lbm_r:
-      enabled: true
+      enabled: false
     521.wrf_r:
-      enabled: true
+      enabled: false
       CPORTABILITY: -DSPEC_CASE_FLAG
       FPORTABILITY: -fconvert=big-endian
     526.blender_r:
-      enabled: true
+      enabled: false
+      EXTRA_CXXFLAGS: -std=c++17
       PORTABILITY: -funsigned-char -DSPEC_LINUX -Wno-stringop-overread
     527.cam4_r:
-      enabled: true
+      enabled: false
       PORTABILITY: -DSPEC_CASE_FLAG
       CPORTABILITY: -Wno-implicit-int
     538.imagick_r:
-      enabled: true
+      enabled: false
     544.nab_r:
-      enabled: true
+      enabled: false
     549.fotonik3d_r:
-      enabled: true
+      enabled: false
       CPORTABILITY: -fno-unsafe-math-optimizations -fcommon
     554.roms_r:
-      enabled: true
+      enabled: false
     603.bwaves_s:
       enabled: false
     607.cactuBSSN_s:
@@ -198,4 +206,4 @@ cpu2017:
       FPORTABILITY: -fconvert=big-endian
   run:
     size: ref
-    iterations: 3
+    iterations: 1
