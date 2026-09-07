@@ -235,14 +235,27 @@ pipeline {
         
         stage('Collect Result') {
             steps {
-                sh '''
-                    set -eux
+                script {
+                    // Capture the git revision from the checked-out LLVM source.
+                    def revision = sh(
+                        script: 'git -C "$LLVM_SOURCE_DIR" rev-parse HEAD',
+                        returnStdout: true
+                    ).trim()
+                    withEnv([
+                        "GERRIT_CHANGE_NUMBER=$GERRIT_CHANGE",
+                        "GERRIT_PATCHSET_NUMBER=$GERRIT_PATCHSET",
+                        "GERRIT_PATCHSET_REVISION=${revision}",
+                    ]) {
+                        sh '''
+                            set -eux
 
-                    python3 "$CI_ROOT/tools/collect-result.py" \
-                        --results-dir "$SPEC_BUILD_DIR" \
-                        --spec-ci "$WORKSPACE/spec-ci.yaml" \
-                        --output-dir "$SPEC_RESULT_DIR"
-                '''
+                            python3 "$CI_ROOT/tools/collect-result.py" \
+                                --results-dir "$SPEC_BUILD_DIR" \
+                                --spec-ci "$WORKSPACE/spec-ci.yaml" \
+                                --output-dir "$SPEC_RESULT_DIR"
+                        '''
+                    }
+                }
             }
         }
         
