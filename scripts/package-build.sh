@@ -38,7 +38,13 @@ echo "Output:  $OUTPUT_DIR/$ARCHIVE"
 echo
 
 # Create archive with the directory contents, using a stable internal path.
-tar -czf "$OUTPUT_DIR/$ARCHIVE" -C "$(dirname "$BUILD_DIR")" "$(basename "$BUILD_DIR")"
+# Exclude build_* and run_* directories — they contain intermediate build
+# artifacts and are not needed in the packaged archive.
+echo "Excluding build_*/run_* directories from archive"
+tar -czf "$OUTPUT_DIR/$ARCHIVE" \
+    --exclude='build_*' \
+    --exclude='run_*' \
+    -C "$(dirname "$BUILD_DIR")" "$(basename "$BUILD_DIR")"
 
 SIZE="$(du -h "$OUTPUT_DIR/$ARCHIVE" | cut -f1)"
 echo "Archive size: $SIZE"
