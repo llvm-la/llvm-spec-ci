@@ -186,6 +186,8 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     d = yaml.safe_load(Path(a.yaml).read_text())
+    if d is None:
+        raise SystemExit(f"error: {a.yaml} is empty or contains no data")
 
     # cfg / script filenames are prefixed with author + name so multiple
     # runs / users can share one output directory without colliding.
