@@ -111,7 +111,3 @@ cpu2017:            # present => cpu2017.cfg generated
 python3 spec-ci.py init --specs cpu2006 cpu2017   # scaffold a YAML
 python3 spec-ci.py validate spec-ci.yaml          # validate
 ```
-
-Path configuration (`LLVM_BUILD_DIR`, `SPEC_CI_FILE`, ...) is read from the
-repo-root `.env` by the Python scripts via `python-dotenv`. Copy
-`.env.example` to `.env` and adjust for the machine.
