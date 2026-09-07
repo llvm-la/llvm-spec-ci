@@ -1,0 +1,182 @@
+body {
+    margin: 0;
+    background: #f6f8fa;
+    color: #24292f;
+    font-family: Arial, "Microsoft YaHei", sans-serif
+}
+
+.container {
+    max-width: 960px;
+    margin: auto;
+    padding: 28px
+}
+
+.muted {
+    color: #57606a
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 18px;
+    margin: 18px 0
+}
+
+.selector {
+    display: flex;
+    gap: 18px;
+    align-items: end
+}
+
+.selector div {
+    flex: 1
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px
+}
+
+select {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px
+}
+
+.selector button {
+    padding: 10px 24px;
+    background: #0969da;
+    color: #fff;
+    border: 0;
+    border-radius: 6px
+}
+
+.meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px
+}
+
+.suitehead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+}
+
+.suitehead h2 {
+    margin: 0
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0
+}
+
+th,
+td {
+    border: 1px solid #d0d7de;
+    padding: 8px 10px
+}
+
+th {
+    background: #f6f8fa;
+    text-align: center
+}
+
+td {
+    text-align: right
+}
+
+td:first-child {
+    text-align: left
+}
+
+.expand {
+    border: 0;
+    background: transparent
+}
+
+.detail {
+    display: none
+}
+
+.detail.show {
+    display: table-row
+}
+
+.inside {
+    padding: 10px;
+    background: #fafbfc
+}
+
+.configs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px
+}
+
+.configs>div {
+    border: 1px solid #d0d7de;
+    padding: 12px;
+    background: #fff
+}
+
+.configs h5 {
+    margin-top: 0
+}
+
+.configs th {
+    text-align: left;
+    width: 180px
+}
+
+code {
+    word-break: break-word;
+    white-space: pre-wrap
+}
+
+.good {
+    color: #1a7f37;
+    font-weight: bold
+}
+
+.bad {
+    color: #cf222e;
+    font-weight: bold
+}
+
+details {
+    margin-top: 14px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 10px
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold
+}
+
+.error {
+    color: #cf222e;
+    background: #ffebe9;
+    padding: 10px
+}
+
+@media(max-width:900px) {
+
+    .selector,
+    .meta,
+    .configs {
+        display: grid;
+        grid-template-columns: 1fr
+    }
+
+    .suitehead {
+        display: block
+    }
+}

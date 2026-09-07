@@ -18,6 +18,9 @@ Gerrit Patch
  -> Collect result (tools/collect-result.py) -> $SPEC_RESULT_DIR/result-{name}-{author}-{change}-{patchset}-{build}.json
  -> Package results (scripts/package-build.sh + archiveArtifacts) -> spec-build-<timestamp>.tar.gz (Jenkins artifact)
  -> Cleanup Workspace (rm spec-ci.yaml, tarball; keep $SPEC_RESULT_DIR for comparison)
+
+`SPEC_RESULT_DIR` defaults to `$SPEC_RESULT_DIR` from `.env` (local dev) or `$WORKSPACE/spec-result` (Jenkins).
+The `spec-compare` web app reads the same directory via `$SPEC_RESULT_DIR`, so CI results are immediately available for comparison.
 ```
 
 The SPEC configuration is generated from a single human-readable YAML file

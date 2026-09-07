@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <title>SPEC CI Result Compare</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>SPEC CI Result Compare</h1>
+        <p class="muted">SPEC CI 测试结果精细化对比工具</p>
+        {% if not available %}<div class="card">未发现 JSON。请将结果放入 <code>results/</code>。</div>{% else %}
+        <form class="card selector">
+            <div><label>Baseline</label><select name="baseline">{% for r in available %}<option value="{{r.file}}" {% if
+                        r.file==baseline_name %}selected{% endif %}>{{r.file}} | Build #{{r.build_number}} | Patchset
+                        {{r.patchset}}</option>{% endfor %}</select></div>
+            <div><label>Compare</label><select name="compare">{% for r in available %}<option value="{{r.file}}" {% if
+                        r.file==compare_name %}selected{% endif %}>{{r.file}} | Build #{{r.build_number}} | Patchset
+                        {{r.patchset}}</option>{% endfor %}</select></div><button>Compare</button>
+        </form>
+        {% if error %}<div class="error">{{error}}</div>{% endif %}
+        {% macro meta_card(title, r) %}<div class="card">
+            <h3>{{title}}</h3>File: {{r.file}}<br>Change: {% if link_cfg.gerrit_change_url and r.gerrit.get("change")
+            %}<a href="{{link_cfg.gerrit_change_url.format(change=r.gerrit.change)}}"
+                target="_blank">{{r.gerrit.change}}</a>{% else %}{{r.gerrit.get("change","—")}}{% endif %}<br>Patchset:
+            {{r.gerrit.get("patchset","—")}}<br>Build: {% if link_cfg.jenkins_build_url and r.gerrit.get("build_number")
+            %}<a href="{{link_cfg.jenkins_build_url.format(build_number=r.gerrit.build_number)}}"
+                target="_blank">{{r.gerrit.build_number}}</a>{% else %}{{r.gerrit.get("build_number","—")}}{% endif %}
+        </div>{% endmacro %}
+        {% if baseline %}<div class="meta">{{ meta_card("Baseline", baseline) }}{{ meta_card("Compare", compare) }}
+        </div>{% endif %}
+        {% for year_group in suites %}
+        <h2>SPEC CPU{{year_group.year}}</h2>
+        <section class="card suite">
+            <div class="configs defaults">
+                <div>
+                    <h5>Baseline</h5>
+                    <p>Run：{% for k,v in year_group.baseline_run.items() %}<code>{{k}}={{v}}</code> {% endfor %}</p>
+                    <table>{% for k,v in year_group.baseline_options.items() %}<tr>
+                            <th>{{k}}</th>
+                            <td><code>{{v}}</code></td>
+                        </tr>{% endfor %}</table>
+                </div>
+                <div>
+                    <h5>Compare</h5>
+                    <p>Run：{% for k,v in year_group.compare_run.items() %}<code>{{k}}={{v}}</code> {% endfor %}</p>
+                    <table>{% for k,v in year_group.compare_options.items() %}<tr>
+                            <th>{{k}}</th>
+                            <td><code>{{v}}</code></td>
+                        </tr>{% endfor %}</table>
+                </div>
+            </div>
+            {% for s in year_group.suites %}<div class="suite-block">
+                <div class="suitehead">
+                    <h3>{{s.name}}</h3>
+                </div>
+                {% if s.common %}<table>
+                    <thead>
+                        <tr>
+                            <th>Benchmark</th>
+                            <th colspan="2">Time</th>
+                            <th>Time Change</th>
+                            <th colspan="2">Score</th>
+                            <th>Score Change</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th>Baseline</th>
+                            <th>Compare</th>
+                            <th></th>
+                            <th>Baseline</th>
+                            <th>Compare</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for x in s.common %}<tr>
+                            <td>{% if x.in_baseline or x.in_compare %}<button class="expand"
+                                    onclick="toggle('d{{loop.index0}}-{{s.name}}',this)">▶</button>{% endif
+                                %}<b>{{x.benchmark}}</b>
+                            </td>
+                            <td>{% if x.in_baseline %}{{x.baseline.time_mean|number}}{% else %}—{% endif %}</td>
+                            <td>{% if x.in_compare %}{{x.compare.time_mean|number}}{% else %}—{% endif %}</td>
+                            <td
+                                class="{% if x.time_change and x.time_change>0 %}good{% elif x.time_change and x.time_change<0 %}bad{% endif %}">
+                                {{x.time_change|percent}}</td>
+                            <td>{% if x.in_baseline %}{% if x.baseline.score_valid %}{{x.baseline.score_mean|number}}{%
+                                else %}<span class="bad">ERROR</span>{% endif %}{% else %}—{% endif %}</td>
+                            <td>{% if x.in_compare %}{% if x.compare.score_valid %}{{x.compare.score_mean|number}}{%
+                                else %}<span class="bad">ERROR</span>{% endif %}{% else %}—{% endif %}</td>
+                            <td
+                                class="{% if x.score_change and x.score_change>0 %}good{% elif x.score_change and x.score_change<0 %}bad{% endif %}">
+                                {{x.score_change|percent}}</td>
+                        </tr>
+                        {% if x.in_baseline or x.in_compare %}<tr id="d{{loop.index0}}-{{s.name}}" class="detail">
+                            <td colspan="7">
+                                <div class="inside">
+                                    <h4>每次运行结果</h4>
+                                    <table>
+                                        <tr>
+                                            <th>Run</th>
+                                            <th>Baseline Time</th>
+                                            <th>Compare Time</th>
+                                            <th>Baseline Score</th>
+                                            <th>Compare Score</th>
+                                        </tr>{% set
+                                        n=[x.baseline.time|length,x.compare.time|length,x.baseline.ratio|length,x.compare.ratio|length]|max
+                                        %}{% for i in range(n) %}<tr>
+                                            <td>#{{i+1}}</td>
+                                            <td>{{x.baseline.time[i]|number if i<x.baseline.time|length else "—" }}</td>
+                                            <td>{{x.compare.time[i]|number if i<x.compare.time|length else "—" }}</td>
+                                            <td>{% if i<x.baseline.ratio|length and x.baseline.ratio[i]>=0
+                                                    %}{{x.baseline.ratio[i]|number}}{% elif i<x.baseline.ratio|length
+                                                        %}<span class="bad">ERROR</span>{% else %}—{% endif %}</td>
+                                            <td>{% if i<x.compare.ratio|length and x.compare.ratio[i]>=0
+                                                    %}{{x.compare.ratio[i]|number}}{% elif i<x.compare.ratio|length
+                                                        %}<span class="bad">ERROR</span>{% else %}—{% endif %}</td>
+                                        </tr>{% endfor %}
+                                    </table>
+                                    <h4>编译与运行参数</h4>
+                                    <div class="configs">
+                                        {% if x.in_baseline %}<div>
+                                            <h5>Baseline</h5>
+                                            <p>Run：{% for k,v in x.baseline.config.run.items()
+                                                %}<code>{{k}}={{v}}</code> {%
+                                                endfor %}</p>
+                                            <table>{% for k,v in x.baseline.config.options.items() %}<tr>
+                                                    <th>{{k}}</th>
+                                                    <td><code>{{v}}</code></td>
+                                                </tr>{% endfor %}</table>
+                                        </div>{% endif %}
+                                        {% if x.in_compare %}<div>
+                                            <h5>Compare</h5>
+                                            <p>Run：{% for k,v in x.compare.config.run.items() %}<code>{{k}}={{v}}</code>
+                                                {%
+                                                endfor %}</p>
+                                            <table>{% for k,v in x.compare.config.options.items() %}<tr>
+                                                    <th>{{k}}</th>
+                                                    <td><code>{{v}}</code></td>
+                                                </tr>{% endfor %}</table>
+                                        </div>{% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>{% endif %}{% endfor %}
+                        {% if s.baseline_geomean is not none %}<tr class="geomean">
+                            <td><b>Geomean</b></td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>{{s.baseline_geomean|number}}</td>
+                            <td>{{s.compare_geomean|number}}</td>
+                            <td
+                                class="{% if s.geomean_change and s.geomean_change>0 %}good{% elif s.geomean_change and s.geomean_change<0 %}bad{% endif %}">
+                                {{s.geomean_change|percent}}</td>
+                        </tr>{% endif %}
+                    </tbody>
+                </table>{% else %}<p>无运行子项。</p>{% endif %}
+            </div>{% endfor %}
+        </section>{% endfor %}{% endif %}
+    </div>
+    <script>function toggle(id, b) { let e = document.getElementById(id); e.classList.toggle("show"); b.textContent = e.classList.contains("show") ? "▼" : "▶" }</script>
+</body>
+
+</html>

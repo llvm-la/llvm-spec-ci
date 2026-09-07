@@ -1,0 +1,4 @@
+{
+    "gerrit_change_url": "url/+/{change}",
+    "jenkins_build_url": "url/{build_number}"
+}
