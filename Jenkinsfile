@@ -24,55 +24,36 @@ pipeline {
             description: 'Gerrit Patchset Number，例如：1'
         )
 
-        file(
-            name: 'spec-ci.yaml',
+        base64File(
+            name: 'spec_ci_yaml',
             description: '上传 SPEC CI 配置文件'
         )
-
     }
 
     environment {
         CI_ROOT =
-            '/path/to/ci'
+            '/path/to/llvm-spec-ci'
 
         LLVM_SOURCE_DIR =
             '/path/to/llvm-project'
 
         LLVM_BUILD_DIR =
             '/path/to/build-llvm'
-
-        # LLVM build defaults (overridable when calling build-llvm.sh).
-        LLVM_BUILD_TYPE =
-            'Release'
-
-        LLVM_BUILD_JOBS =
-            '32'
-
-        LLVM_BUILD_MODE =
-            'incremental'
-
-        # Base commit that Gerrit patchsets are applied on top of.
-        BASE_COMMIT =
+        
+        BASE_COMMIT = 
             '0000000000000000000000000000000000000000'
-
-        # SPEC installation directories (must contain shrc).
+            
         SPEC_CPU2006_DIR =
             '/path/to/cpu2006'
 
         SPEC_CPU2017_DIR =
             '/path/to/cpu2017'
-
-        # SPEC build directory: where generate.py writes .cfg/.sh files,
-        # and where runspec/runcpu write results (also the --results-dir
-        # passed to collect-result.py).
+            
         SPEC_BUILD_DIR =
             '/path/to/build-spec'
-
-        # SPEC result directory: where collect-result.py writes the
-        # per-build result JSON (auto-named result-{author}-{change}-...).
+            
         SPEC_RESULT_DIR =
             '/path/to/spec-result'
-
     }
 
  stages {
@@ -109,7 +90,6 @@ pipeline {
 
         }
 
-
         stage('Cleanup') {
 
             steps {
@@ -130,12 +110,16 @@ pipeline {
             }
 
         }
-
-
         stage('Verify Upload') {
 
             steps {
 
+                withFileParameter('spec_ci_yaml') {
+                    sh '''
+                        set -eux
+                        cp "$spec_ci_yaml" "$WORKSPACE/spec-ci.yaml"
+                    '''
+                }
                 script {
 
                     if (
@@ -153,8 +137,6 @@ pipeline {
             }
 
         }
-
-
         stage('Checkout Gerrit Patchset') {
 
             steps {
@@ -192,24 +174,21 @@ pipeline {
             }
 
         }
-
+        
         stage('Build LLVM') {
 
             steps {
-
                 sh '''
                     set -eux
-
                     "$CI_ROOT/scripts/build-llvm.sh" \
                         "$LLVM_BUILD_TYPE" \
                         "$LLVM_BUILD_JOBS"  \
                         "$LLVM_BUILD_MODE"
                 '''
-
             }
 
         }
-
+        
         stage('Generate SPEC CFG + Run Scripts') {
 
             steps {
@@ -221,13 +200,13 @@ pipeline {
                         --yaml "$WORKSPACE/spec-ci.yaml" \
                         --llvm-dir "$LLVM_BUILD_DIR" \
                         --out "$SPEC_BUILD_DIR" \
-                        --output-root "$SPEC_BUILD_DIR"
+                        --expid "$SPEC_BUILD_DIR"
                 '''
 
             }
 
         }
-
+        
         stage('Run SPEC CPU2006') {
 
             steps {
@@ -241,7 +220,6 @@ pipeline {
             }
 
         }
-
         stage('Run SPEC CPU2017') {
 
             steps {
@@ -253,13 +231,10 @@ pipeline {
                 '''
 
             }
-
         }
-
+        
         stage('Collect Result') {
-
             steps {
-
                 sh '''
                     set -eux
 
@@ -268,15 +243,11 @@ pipeline {
                         --spec-ci "$WORKSPACE/spec-ci.yaml" \
                         --output-dir "$SPEC_RESULT_DIR"
                 '''
-
             }
-
         }
-
+        
         stage('Package Results') {
-
             steps {
-
                 sh '''
                     set -eux
 
@@ -284,16 +255,13 @@ pipeline {
                         "$SPEC_BUILD_DIR" \
                         "$WORKSPACE"
                 '''
-
                 archiveArtifacts artifacts: 'spec-build-*.tar.gz', fingerprint: true
             }
 
         }
-
+        
         stage('Cleanup Workspace') {
-
             steps {
-
                 sh '''
                     set -eux
 
@@ -302,11 +270,8 @@ pipeline {
                     rm -f "$WORKSPACE/spec-ci.yaml"
                     rm -f "$WORKSPACE"/spec-build-*.tar.gz
                 '''
-
             }
-
         }
-
     }
 
 }

@@ -12,15 +12,6 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$HERE")"
 
-if [ ! -f "$ROOT/.env" ]; then
-    echo "ERROR: $ROOT/.env not found. Copy .env.example to .env and adjust paths."
-    exit 1
-fi
-set -a
-# shellcheck source=../.env
-. "$ROOT/.env"
-set +a
-
 BUILD_DIR="${1:-${SPEC_BUILD_DIR:-}}"
 OUTPUT_DIR="${2:-${WORKSPACE:-$(pwd)}}"
 

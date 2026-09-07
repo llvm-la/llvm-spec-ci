@@ -70,13 +70,16 @@ def _emit_bench_block_cpu2017(name, opts):
     return f"{name}:\n" + "\n".join(lines)
 
 
-def generate_cfg(spec, yaml_block, llvm_dir, template_text):
+def generate_cfg(spec, yaml_block, llvm_dir, template_text, expid=""):
     """Return the cfg text for one spec block."""
     comp = yaml_block.get("compiler", {}).get("default", {})
     run = yaml_block.get("run", {})
     repl = {"LLVM_DIR": llvm_dir, "ITERATIONS": run.get("iterations", 1)}
     for var in OPTIMIZE_VARS:
         repl[var] = comp.get(var, "")
+    # CPU2006 reads expid from the cfg file, not the command line.
+    if spec == "cpu2006" and expid:
+        repl["EXPID"] = expid
 
     out = template_text
     for var, value in repl.items():
@@ -118,7 +121,10 @@ def generate_run_script(spec, yaml_block, cfg_path, expid):
       - raises ulimit -s/-c unlimited
       - cds into the SPEC installation and sources shrc
       - runs runspec/runcpu with the generated cfg, size, enabled
-        benchmarks, iterations and --expid
+        benchmarks, iterations.
+
+    CPU2006: expid is set in the cfg file (not on command line).
+    CPU2017: expid is passed as --expid command-line argument.
     """
     dir_ = os.environ.get(f"SPEC_{spec.upper()}_DIR", "")
     size = yaml_block.get("run", {}).get("size", "ref")
@@ -126,6 +132,9 @@ def generate_run_script(spec, yaml_block, cfg_path, expid):
     benchmarks = _enabled_benchmarks(yaml_block)
     bench_args = " ".join(benchmarks)
     cmd = SPEC_CMD[spec]
+
+    # CPU2017 uses --expid flag; CPU2006 reads expid from cfg.
+    expid_flag = "" if spec == "cpu2006" else f" --expid={expid}"
 
     return (
         f"#!/bin/bash\n"
@@ -136,7 +145,7 @@ def generate_run_script(spec, yaml_block, cfg_path, expid):
         f"source shrc\n"
         f"\n"
         f"{cmd} -c {cfg_path} -i {size} {bench_args} -n {iterations}"
-        f" --expid={expid}\n"
+        f"{expid_flag}\n"
     )
 
 
@@ -150,7 +159,7 @@ def main():
                    help="LLVM build directory (default: $LLVM_BUILD_DIR from .env)")
     p.add_argument("--out", "--output", default=None, dest="out",
                    help="output directory for the generated .cfg/.sh files")
-    p.add_argument("--output-root", default=None,
+    p.add_argument("--expid", default=None,
                    help="SPEC expid (default: $SPEC_BUILD_DIR or $SPEC_RESULT_DIR)")
     a = p.parse_args()
 
@@ -167,7 +176,7 @@ def main():
                                        os.environ.get("SPEC_RESULT_DIR", ""))
     if not a.expid:
         raise SystemExit(
-            "error: --output-root required (or set SPEC_BUILD_DIR / SPEC_RESULT_DIR in .env)")
+            "error: --expid required (or set SPEC_BUILD_DIR / SPEC_RESULT_DIR in .env)")
 
     # Resolve to absolute paths so the generated cfg/sh work regardless of $PWD.
     a.llvm_dir = str(Path(a.llvm_dir).resolve())
@@ -196,7 +205,7 @@ def main():
             continue
 
         template = TEMPLATE_DIR / f"{spec}.cfg"
-        cfg = generate_cfg(spec, block, a.llvm_dir, template.read_text())
+        cfg = generate_cfg(spec, block, a.llvm_dir, template.read_text(), a.expid)
 
         cfg_dest = out_dir / f"{prefix}-{spec}.cfg"
         cfg_dest.write_text(cfg)
