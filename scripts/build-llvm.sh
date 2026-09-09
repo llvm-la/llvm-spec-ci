@@ -58,7 +58,8 @@ cmake \
     -DCMAKE_INSTALL_PREFIX="$LLVM_BUILD_DIR" \
     -DLLVM_USE_LINKER=lld \
     -DLLVM_TARGETS_TO_BUILD=LoongArch \
-    -DLLVM_ENABLE_PROJECTS="clang;flang" \
+    -DLLVM_BINUTILS_INCDIR:PATH=/usr/include \
+    -DLLVM_ENABLE_PROJECTS="clang;flang;lld" \
     -DLLVM_ENABLE_RUNTIMES="flang-rt;openmp" \
     "$LLVM_SOURCE_DIR/llvm"
 
