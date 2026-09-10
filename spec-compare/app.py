@@ -39,10 +39,13 @@ FAILURE_TIP = {
 
 def valid_score(x): return isinstance(x, list) and bool(x) and all(v>=0 for v in x)
 def fail_code(x):
-    """如果 ratio 是负的失败码，返回对应常量字符串，否则返回 None。"""
-    if isinstance(x, list) or not isinstance(x, (int, float)):
+    """如果 ratio 单元素列表含负失败码，返回对应常量字符串，否则返回 None。"""
+    if not isinstance(x, list) or len(x) != 1:
         return None
-    return FAILURE_CODES.get(int(x))
+    v = x[0]
+    if not isinstance(v, (int, float)) or v >= 0:
+        return None
+    return FAILURE_CODES.get(int(v))
 def perf(old,new,higher):
     if old is None or new is None or old==0:return None
     return ((new-old) if higher else (old-new))/old*100
@@ -58,10 +61,16 @@ def cfg(r,suite,bench):
     opt.update({k:v for k,v in sc.get("benchmarks",{}).get(bench,{}).items() if k!="enabled"})
     return {"options":opt,"run":sc.get("run",{})}
 
+def _normalize_ratio(r):
+    """将 ratio 统一为 list：成功时已是 list，失败码(int)包装为 [code]。"""
+    if isinstance(r, list):
+        return r
+    return [r]
+
 def item(suite,bench,a,b):
     x=a["suites"].get(suite,{}).get(bench); y=b["suites"].get(suite,{}).get(bench)
     xt=x.get("time",[]) if x else []; yt=y.get("time",[]) if y else []
-    xs=x.get("ratio",[]) if x else []; ys=y.get("ratio",[]) if y else []
+    xs=_normalize_ratio(x.get("ratio",[])) if x else []; ys=_normalize_ratio(y.get("ratio",[])) if y else []
     xsm=avg(xs) if valid_score(xs) else None; ysm=avg(ys) if valid_score(ys) else None
     fc_x=fail_code(xs); fc_y=fail_code(ys)
     return {"suite":suite,"benchmark":bench,"in_baseline":x is not None,"in_compare":y is not None,
