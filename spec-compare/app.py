@@ -37,7 +37,7 @@ FAILURE_TIP = {
     -3: "Not Run: 基准测试已启用但未在 RSF 中出现",
 }
 
-def valid_score(x): return bool(x) and all(v>=0 for v in x)
+def valid_score(x): return isinstance(x, list) and bool(x) and all(v>=0 for v in x)
 def fail_code(x):
     """如果 ratio 是负的失败码，返回对应常量字符串，否则返回 None。"""
     if isinstance(x, list) or not isinstance(x, (int, float)):
