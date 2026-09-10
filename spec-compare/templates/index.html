@@ -87,8 +87,10 @@
                                 class="{% if x.time_change and x.time_change>0 %}good{% elif x.time_change and x.time_change<0 %}bad{% endif %}">
                                 {{x.time_change|percent}}</td>
                             <td>{% if x.in_baseline %}{% if x.baseline.score_valid %}{{x.baseline.score_mean|number}}{%
+                                elif x.baseline.fail_code %}<span class="fail-tag fail-{{x.baseline.fail_code|lower}}" title="{% if x.baseline.fail_code=='CE' %}编译失败，请检查编译日志{% elif x.baseline.fail_code=='RE' %}运行崩溃或非零退出码{% else %}已启用但未在 RSF 中出现{% endif %}">{{x.baseline.fail_code}}</span>{%
                                 else %}<span class="bad">ERROR</span>{% endif %}{% else %}—{% endif %}</td>
                             <td>{% if x.in_compare %}{% if x.compare.score_valid %}{{x.compare.score_mean|number}}{%
+                                elif x.compare.fail_code %}<span class="fail-tag fail-{{x.compare.fail_code|lower}}" title="{% if x.compare.fail_code=='CE' %}编译失败，请检查编译日志{% elif x.compare.fail_code=='RE' %}运行崩溃或非零退出码{% else %}已启用但未在 RSF 中出现{% endif %}">{{x.compare.fail_code}}</span>{%
                                 else %}<span class="bad">ERROR</span>{% endif %}{% else %}—{% endif %}</td>
                             <td
                                 class="{% if x.score_change and x.score_change>0 %}good{% elif x.score_change and x.score_change<0 %}bad{% endif %}">
@@ -113,10 +115,10 @@
                                             <td>{{x.compare.time[i]|number if i<x.compare.time|length else "—" }}</td>
                                             <td>{% if i<x.baseline.ratio|length and x.baseline.ratio[i]>=0
                                                     %}{{x.baseline.ratio[i]|number}}{% elif i<x.baseline.ratio|length
-                                                        %}<span class="bad">ERROR</span>{% else %}—{% endif %}</td>
+                                                        %}<span class="fail-tag">{{x.baseline.fail_code or 'ERROR'}}</span>{% else %}—{% endif %}</td>
                                             <td>{% if i<x.compare.ratio|length and x.compare.ratio[i]>=0
                                                     %}{{x.compare.ratio[i]|number}}{% elif i<x.compare.ratio|length
-                                                        %}<span class="bad">ERROR</span>{% else %}—{% endif %}</td>
+                                                        %}<span class="fail-tag">{{x.compare.fail_code or 'ERROR'}}</span>{% else %}—{% endif %}</td>
                                         </tr>{% endfor %}
                                     </table>
                                     <h4>编译与运行参数</h4>
@@ -155,6 +157,10 @@
                             <td
                                 class="{% if s.geomean_change and s.geomean_change>0 %}good{% elif s.geomean_change and s.geomean_change<0 %}bad{% endif %}">
                                 {{s.geomean_change|percent}}</td>
+                        </tr>{% endif %}
+                        {% if s.fail_count > 0 %}<tr class="fail-summary">
+                           <td><b>失败统计</b></td>
+                            <td colspan="6"><span class="muted">{{ s.fail_count }} 个 benchmark 失败（不计入 Geomean）</span></td>
                         </tr>{% endif %}
                     </tbody>
                 </table>{% else %}<p>无运行子项。</p>{% endif %}

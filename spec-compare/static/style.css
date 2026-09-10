@@ -149,6 +149,40 @@ code {
     font-weight: bold
 }
 
+.fail-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    cursor: help
+}
+
+.fail-ce {
+    background: #bf8700
+}
+
+.fail-re {
+    background: #cf222e
+}
+
+.fail-not_run {
+    background: #57606a
+}
+
+.fail-summary td {
+    text-align: left;
+    padding: 6px 10px;
+    background: #fff8c5;
+    font-size: 13px
+}
+
+.geomean td {
+    background: #f6f8fa;
+    font-weight: bold
+}
+
 details {
     margin-top: 14px;
     border: 1px solid #d0d7de;

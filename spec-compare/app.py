@@ -21,7 +21,28 @@ def discover():
     return out
 
 def avg(x): return statistics.mean(x) if x else None
+FAILURE_CODES = {
+    -1: "CE",    # Compilation Error
+    -2: "RE",    # Runtime Error
+    -3: "NOT_RUN",  # Did not appear in RSF
+}
+FAILURE_LABEL = {
+    -1: "编译错误",
+    -2: "运行时错误",
+    -3: "未运行",
+}
+FAILURE_TIP = {
+    -1: "Compilation Error: 编译失败，请检查编译日志",
+    -2: "Runtime Error: 运行崩溃或非零退出码",
+    -3: "Not Run: 基准测试已启用但未在 RSF 中出现",
+}
+
 def valid_score(x): return bool(x) and all(v>=0 for v in x)
+def fail_code(x):
+    """如果 ratio 是负的失败码，返回对应常量字符串，否则返回 None。"""
+    if isinstance(x, list) or not isinstance(x, (int, float)):
+        return None
+    return FAILURE_CODES.get(int(x))
 def perf(old,new,higher):
     if old is None or new is None or old==0:return None
     return ((new-old) if higher else (old-new))/old*100
@@ -42,9 +63,10 @@ def item(suite,bench,a,b):
     xt=x.get("time",[]) if x else []; yt=y.get("time",[]) if y else []
     xs=x.get("ratio",[]) if x else []; ys=y.get("ratio",[]) if y else []
     xsm=avg(xs) if valid_score(xs) else None; ysm=avg(ys) if valid_score(ys) else None
+    fc_x=fail_code(xs); fc_y=fail_code(ys)
     return {"suite":suite,"benchmark":bench,"in_baseline":x is not None,"in_compare":y is not None,
-      "baseline":{"time":xt,"ratio":xs,"time_mean":avg(xt),"score_mean":xsm,"score_valid":valid_score(xs),"config":cfg(a,suite,bench) if x else None},
-      "compare":{"time":yt,"ratio":ys,"time_mean":avg(yt),"score_mean":ysm,"score_valid":valid_score(ys),"config":cfg(b,suite,bench) if y else None},
+      "baseline":{"time":xt,"ratio":xs,"time_mean":avg(xt),"score_mean":xsm,"score_valid":valid_score(xs),"fail_code":fc_x,"config":cfg(a,suite,bench) if x else None},
+      "compare":{"time":yt,"ratio":ys,"time_mean":avg(yt),"score_mean":ysm,"score_valid":valid_score(ys),"fail_code":fc_y,"config":cfg(b,suite,bench) if y else None},
       "time_change":perf(avg(xt),avg(yt),False) if x and y else None,
       "score_change":perf(xsm,ysm,True) if xsm is not None and ysm is not None else None}
 
@@ -88,7 +110,7 @@ def compare(a,b):
             else:
                 ag=bg=None
             suite_list.append({"name":suite,"common":common,
-              "baseline_geomean":ag,"compare_geomean":bg,"geomean_change":perf(ag,bg,True),"geomean_count":len(valid)})
+              "baseline_geomean":ag,"compare_geomean":bg,"geomean_change":perf(ag,bg,True),"geomean_count":len(valid),"fail_count":len(common)-len(valid)})
         out.append({"year":year,"suites":suite_list,
           "baseline_options":baseline_opts,"compare_options":compare_opts,
           "baseline_run":baseline_run,"compare_run":compare_run})
